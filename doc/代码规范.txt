@@ -4,7 +4,7 @@
 例：        #define CONFIG_LOG 1
 
 函数名      小写字母，下划线分割单词
-函数参数    下划线开头，小写字母，
+函数参数    下划线开头，小写字母，不分割单词（因此，尽可能简洁）
 例：        void get_param_name(int _param1, char _param2) {}
 注：        debug/debug.h 为例外
 

@@ -48,6 +48,7 @@ void Assert(bool _cond, std::string _msg, int _code) {
 
 void Log(std::string _msg, err_type _type) {
     #ifdef CONFIG_LOG
+    std::string logMsg = 
     g_log_file << get_prompt_str(_type, _msg) << std::endl;
     #endif
     return;

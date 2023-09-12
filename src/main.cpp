@@ -9,9 +9,6 @@
 std::ofstream g_log_file;
 #endif
 
-/*alias别名用map实现*/
-std::map <std::string, std::string> g_alias;
-
 
 
 int main(int argc, char **argv) {
@@ -19,11 +16,9 @@ int main(int argc, char **argv) {
 
 
     /* Initiating */
-    Assert(minsh_init(), "Init failed", 1);
+    Assert(minsh_init(), "Init failed", 100);
     
-    Assert(init_alias(), "Init_alias failed", 2);
     /* TODO: Main Loop */
-    Assert(show_prompt(), "show_prompt failed", 3);
 
     return 0;
 }

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 代码部分格式规范：
 
 宏定义      大写字母，下划线分割单词
@@ -21,28 +20,4 @@
                 char _member2;
                 
                 int get_member_1();
-=======
-代码部分格式规范：
-
-宏定义      大写字母，下划线分割单词
-例：        #define CONFIG_LOG 1
-
-函数名      小写字母，下划线分割单词
-函数参数    下划线开头，小写字母，不分割单词（因此，尽可能简洁）
-例：        void get_param_name(int _param1, char _param2) {}
-注：        debug/debug.h 为例外
-
-局部变量    驼峰命名法
-例：        fileCountNum
-
-全局变量    "g_"开头，驼峰命名
-例：        g_fileCountNum
-
-类/结构体   类名有首字母大写的单词组成，成员变量同函数参数，成员函数同函数名
-例：        class ExampleClass {
-                int _member1;
-                char _member2;
-                
-                int get_member_1();
->>>>>>> 43f888a7259fcc11881a1ea116a5948d27c55f9b
             };

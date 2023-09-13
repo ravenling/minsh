@@ -46,8 +46,13 @@ $(OBJ_DIR)/init.o: $(SRC_DIR)/init/init.cpp
 $(OBJ_DIR)/minsh.o: $(SRC_DIR)/minsh/minsh.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
 
-$(OBJ_DIR)/parser.o: $(SRC_DIR)/parser/parser.cpp
-	$(CC) -c $(CFLAGS) $< -o $@
+
+
+#bison -dv -Wcounterexamples prs.y
+
+
+#$(OBJ_DIR)/parser.o: $(SRC_DIR)/parser/parser.cpp
+#	$(CC) -c $(CFLAGS) $< -o $@
 
 # run
 run: $(BIN)

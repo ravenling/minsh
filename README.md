@@ -12,6 +12,10 @@ parser      - command line parser
 cmdexec     - command executor    
 minsh       - main loop    
 # current goal
-1.  Init function
-2.  Basic main loop
+1.  Basic main loop
+2.  Parser (lex & require to be fixed)
 3.  Builtin "echo" command
+# how to build
+1.  cd to /minsh
+2.  enter make to build
+3.  enter make run to build&run

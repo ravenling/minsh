@@ -36,3 +36,9 @@
 
 # VScode...thing
 /.vscode
+
+# Bison things
+/src/parser/prs.output
+/src/parser/prs.tab.cc
+/src/parser/prs.tab.hh
+/src/parser/location.hh

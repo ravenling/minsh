@@ -40,7 +40,7 @@ struct PrefixSuffixWord : public PrefixSuffix{
     :_word(_newword){_type = AST_PRESUF_WORD;}
 
     void debug_print() {
-        std::cout << "[PSWord] " << _word;
+        std::cout << "[PSWord] " << _word << std::endl;
     }
     
 };
@@ -94,6 +94,7 @@ struct SimpleCommand final : public Command {
         std::cout << "<SimpleCommand>" << std::endl;
 
         std::cout << "#### PREFIX" << std::endl;
+        std::cout << "PREFIX count: " << _prefix.size() << std::endl;
         for(auto pre : _prefix) {
             switch(pre->_type) {
             case AST_PRESUF_WORD:
@@ -112,6 +113,7 @@ struct SimpleCommand final : public Command {
         std::cout << _cmdword << std::endl;
 
         std::cout << "#### SUFFIX" << std::endl;
+        std::cout << "SUFFIX count: " << _suffix.size() << std::endl;
         for(auto suf : _suffix) {
             switch(suf->_type) {
             case AST_PRESUF_WORD:

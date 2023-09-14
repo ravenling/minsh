@@ -9,7 +9,7 @@ int main() {
     
     std::cout << "token parsed" << std::endl;
 
-    g_progAST->debug_print();
+    g_cmdAST->debug_print();
     std::cout << "ast printed" << std::endl;
 
     return 0;

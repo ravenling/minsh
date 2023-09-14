@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+
 #include "parser.h"
 #include "prs.tab.hh"
 #include "location.hh"
@@ -53,8 +54,8 @@ void parser::error(const parser::location_type &_locp, const std::string &_msg){
 %token In
 
 // TODO: Node class type
-%type <std::shared_ptr<MinSHProgram>> program
-%type <std::vector<std::shared_ptr<CompleteCommand>>> complete_commands
+//%type <std::shared_ptr<MinSHProgram>> program
+//%type <std::vector<std::shared_ptr<CompleteCommand>>> complete_commands
 %type <std::shared_ptr<CompleteCommand>> complete_command
 %type <std::vector<std::shared_ptr<AndOrCommand>>> list
 %type <std::shared_ptr<AndOrCommand>> and_or
@@ -74,6 +75,8 @@ void parser::error(const parser::location_type &_locp, const std::string &_msg){
 %precedence "cmd_suffix"
 %precedence IO_NUMBER
 
+%start complete_command
+
 %%
 
 /* -----------------------
@@ -81,41 +84,52 @@ void parser::error(const parser::location_type &_locp, const std::string &_msg){
    reference: https://pubs.opengroup.org/onlinepubs/9699919799.2016edition/utilities/V3_chap02.html#tag_18_09_02
    ----------------------- */
 
+/*
 program             :   linebreak   complete_commands   linebreak
                         {
                             g_progAST = std::make_shared<MinSHProgram>($2);
+                            YYACCEPT;
                         }
                     |   linebreak
                         {
                             g_progAST = std::make_shared<MinSHProgram>(std::vector<std::shared_ptr<CompleteCommand>>{});
+                            YYACCEPT;
                         }
                     ;
+*/
 
+/*
 complete_commands   :   complete_commands   newline_list    complete_command
                         {   
-                            $$.push_back($3);
+                            $1.push_back($3);
+                            $$ = $1;
                         }
                     |                                       complete_command                              
                         {
                             $$ = std::vector<std::shared_ptr<CompleteCommand>>{$1};
+                            YYACCEPT;
                         }
                     ;
+*/
 
 complete_command    :   list    separator_op
                         {
-                            (*$$->_andorlist.rbegin())->_isasync = ($2 == '&');
-                            $$ = std::make_shared<CompleteCommand>($1);
+                            (*$1.rbegin())->_isasync = ($2 == '&');
+                            g_cmdAST = std::make_shared<CompleteCommand>($1);
+                            YYACCEPT;
                         }
                     |   list
                         {
-                            $$ = std::make_shared<CompleteCommand>($1);
+                            g_cmdAST = std::make_shared<CompleteCommand>($1);
+                            YYACCEPT;
                         }
                     ;
 
 list                :   list    separator_op    and_or
                         {
-                            (*$$.rbegin())->_isasync = ($2 == '&');
-                            $$.push_back($3);
+                            (*$1.rbegin())->_isasync = ($2 == '&');
+                            $1.push_back($3);
+                            $$ = $1;
                         }
                     |                           and_or
                         {
@@ -129,13 +143,15 @@ and_or              :                               pipeline
                         }
                     |   and_or  AND_IF  linebreak   pipeline
                         {
-                            (*$$->_pipelinelist.rbegin())->_andorsuf = -1;
-                            $$->_pipelinelist.push_back($4);
+                            (*$1->_pipelinelist.rbegin())->_andorsuf = -1;
+                            $1->_pipelinelist.push_back($4);
+                            $$ = $1;
                         }
                     |   and_or  OR_IF   linebreak   pipeline
                         {
-                            (*$$->_pipelinelist.rbegin())->_andorsuf = 1;
-                            $$->_pipelinelist.push_back($4);
+                            (*$1->_pipelinelist.rbegin())->_andorsuf = 1;
+                            $1->_pipelinelist.push_back($4);
+                            $$ = $1;
                         }
                     ;
 
@@ -155,7 +171,8 @@ pipe_sequence       :                                       command
                         }
                     |   pipe_sequence   '|'     linebreak   command
                         {
-                            $$.push_back($4);
+                            $1.push_back($4);
+                            $$ = $1;
                         }
                     ;
 
@@ -191,42 +208,49 @@ cmd_prefix          :                   io_redirect
                         }
                     |   cmd_prefix      io_redirect
                         {
-                            $$.push_back($2);
+                            $1.push_back($2);
+                            $$ = $1;
                         }
                     |                   ASSIGNMENT_WORD
                         {
+                            auto newPtr = std::make_shared<PrefixSuffixWord>($1);
                             $$ = std::vector<std::shared_ptr<PrefixSuffix>>{
-                                std::make_shared<PrefixSuffixWord>($1)
+                                newPtr
                             };
                         }
                     |   cmd_prefix      ASSIGNMENT_WORD
                         {
-                            $$.push_back(
-                                std::make_shared<PrefixSuffixWord>($2)
+                            auto newPtr = std::make_shared<PrefixSuffixWord>($2);
+                            $1.push_back(
+                                newPtr
                             );
+                            $$ = $1;
                         }
                     ;
 
-// change io_redirect to redirect_list
 cmd_suffix          :                   io_redirect
                         {
                             $$ = std::vector<std::shared_ptr<PrefixSuffix>>{$1};
                         }
                     |   cmd_suffix      io_redirect
                         {
-                            $$.push_back($2);
+                            $1.push_back($2);
+                            $$ = $1;
                         }
                     |                   WORD
                         {
+                            auto newPtr = std::make_shared<PrefixSuffixWord>($1);
                             $$ = std::vector<std::shared_ptr<PrefixSuffix>>{
-                                std::make_shared<PrefixSuffixWord>($1)
+                                newPtr
                             };
                         }
                     |   cmd_suffix      WORD
                         {
-                            $$.push_back(
-                                std::make_shared<PrefixSuffixWord>($2)
+                            auto newPtr = std::make_shared<PrefixSuffixWord>($2);
+                            $1.push_back(
+                                newPtr
                             );
+                            $$ = $1;
                         }
                     ;
 

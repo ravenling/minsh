@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <debug/dbg.h>
+#include <common.h>
 
 /* TODO: complete the MinSH class */
 
@@ -11,8 +12,13 @@ class MinSH{
 
 private:
 
+    // PWD
     static std::string _pwd;
+    // Alias
     static std::map<std::string, std::string> _alias;
+
+    // Input Buffer
+    static char buf[CONFIG_BUF_SIZE];
 
 public:
 

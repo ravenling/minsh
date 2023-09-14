@@ -4,7 +4,6 @@
 /* Define MinSH's static members */
 std::string MinSH::_pwd;
 std::map<std::string, std::string> MinSH::_alias;
-
 /* Main loop */
 int minsh_main_loop() {
 

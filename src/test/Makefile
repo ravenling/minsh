@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS= -g -Werror -Wall 
+CFLAGS= -g -Werror -Wall -I../parser
 TARGET=parser_test.out
 SRCS=../parser/lex.cpp ../parser/parser.cpp ../parser/prs.tab.cc parser_test.cpp
 

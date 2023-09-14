@@ -5,6 +5,18 @@
 #include <vector>
 #include <iostream>
 #include <memory>
+#include "parser.h"
+
+typedef enum ASTType{
+    AST_PROGRAM,
+    AST_CMP_CMD,
+    AST_AND_OR_CMD,
+    AST_PIPELINE,
+    AST_SIMPLE_CMD,
+    AST_IOREDIRECT,
+    AST_IOFILE,
+    AST_PRESUF_WORD,
+} node_type;
 
 struct ASTNode {
     uint8_t _type;
@@ -25,7 +37,7 @@ struct PrefixSuffixWord : public PrefixSuffix{
     std::string _word;
 
     PrefixSuffixWord(std::string _newword)
-    :_word(_newword){}
+    :_word(_newword){_type = AST_PRESUF_WORD;}
 
     void debug_print() {
         std::cout << "[PSWord] " << _word;
@@ -39,7 +51,7 @@ struct IOFile final : public ASTNode {
     std::string _filename;
 
     IOFile(uint8_t _type, std::string _name)
-    :_redirtype(_type), _filename(_name){}
+    :_redirtype(_type), _filename(_name){_type = AST_IOFILE;}
 
     void debug_print() {
         std::vector<std::string> redtab
@@ -55,10 +67,10 @@ struct IORedirect final : public PrefixSuffix {
     std::shared_ptr <IOFile> _iofile;
 
     IORedirect(int8_t _ionum, std::shared_ptr <IOFile> _file)
-    :_ionumber(_ionum), _iofile(std::move(_file)){}
+    :_ionumber(_ionum), _iofile(std::move(_file)){_type = AST_IOREDIRECT;}
 
     void debug_print() {
-        std::cout << "[IORedirect] " << _ionumber << "  ";
+        std::cout << "[IORedirect] " << (int)(_ionumber) << "  ";
         _iofile->debug_print();
         std::cout << std::endl;
     }
@@ -76,14 +88,24 @@ struct SimpleCommand final : public Command {
     SimpleCommand(  std::vector <std::shared_ptr<PrefixSuffix>> _pre, 
                     std::string _cmd,
                     std::vector <std::shared_ptr<PrefixSuffix>> _suf)
-    :_prefix(std::move(_pre)), _cmdword(_cmd), _suffix(std::move(_suf)){}
+    :_prefix(std::move(_pre)), _cmdword(_cmd), _suffix(std::move(_suf)){_type = AST_SIMPLE_CMD;}
 
     void debug_print() {
         std::cout << "<SimpleCommand>" << std::endl;
 
         std::cout << "#### PREFIX" << std::endl;
         for(auto pre : _prefix) {
-            pre->debug_print();
+            switch(pre->_type) {
+            case AST_PRESUF_WORD:
+                std::dynamic_pointer_cast<PrefixSuffixWord>(pre)->debug_print(); 
+                break;
+            case AST_IOREDIRECT: 
+                std::dynamic_pointer_cast<IORedirect>(pre)->debug_print(); 
+                break;
+            default:
+                std::cout << "{Unexpected Prefix Type}" << std::endl;
+                break;
+            }
         }
 
         std::cout << "#### CMDWORD" << std::endl;
@@ -91,7 +113,17 @@ struct SimpleCommand final : public Command {
 
         std::cout << "#### SUFFIX" << std::endl;
         for(auto suf : _suffix) {
-            suf->debug_print();
+            switch(suf->_type) {
+            case AST_PRESUF_WORD:
+                std::dynamic_pointer_cast<PrefixSuffixWord>(suf)->debug_print(); 
+                break;
+            case AST_IOREDIRECT: 
+                std::dynamic_pointer_cast<IORedirect>(suf)->debug_print(); 
+                break;
+            default:
+                std::cout << "{Unexpected Prefix Type}" << std::endl;
+                break;
+            }
         }
 
         std::cout << "<\\SimpleCommand>" << std::endl;
@@ -108,14 +140,22 @@ struct Pipeline final : public ASTNode {
 
     Pipeline(   std::vector <std::shared_ptr<Command>> _newlist,
                 bool _pre, int _suf)
-    :_bangpref(_pre), _andorsuf(_suf), _cmdlist(std::move(_newlist)){}
+    :_bangpref(_pre), _andorsuf(_suf), _cmdlist(std::move(_newlist)){_type = AST_PIPELINE;}
 
     void debug_print() {
         std::cout << "<Pipeline>";
         std::cout << (_bangpref ? " ! (Bang)" : "") << std::endl;
+        std::cout << "CMD count: " << _cmdlist.size() << std::endl;
 
         for(auto cmd : _cmdlist) {
-            cmd->debug_print();
+            switch(cmd->_type) {
+            case AST_SIMPLE_CMD:
+                std::dynamic_pointer_cast<SimpleCommand>(cmd)->debug_print();
+                break; 
+            default:
+                std::cout << "{Unexpected Command Type}" << std::endl;
+                break;
+            }
         }
 
         std::cout << "<\\Pipeline>" << std::endl;
@@ -141,7 +181,7 @@ struct AndOrCommand final : public ASTNode {
 
     AndOrCommand(   std::vector <std::shared_ptr<Pipeline>> _newlist,
                     bool _flag)
-    :_isasync(_flag), _pipelinelist(std::move(_newlist)){}
+    :_isasync(_flag), _pipelinelist(std::move(_newlist)){_type = AST_AND_OR_CMD;}
 
     void debug_print() {
         std::cout << "<AndOrCommand>" << std::endl;
@@ -158,7 +198,7 @@ struct CompleteCommand final : public ASTNode {
     std::vector <std::shared_ptr<AndOrCommand>> _andorlist;
 
     CompleteCommand(std::vector <std::shared_ptr<AndOrCommand>> _newlist)
-    :_andorlist(std::move(_newlist)){}
+    :_andorlist(std::move(_newlist)){_type = AST_CMP_CMD;}
 
     void debug_print() {
         std::cout << "<CompleteCommand>" << std::endl;
@@ -174,25 +214,17 @@ struct MinSHProgram final: public ASTNode {
     std::vector <std::shared_ptr<CompleteCommand>> _cmplist;
 
     MinSHProgram(std::vector <std::shared_ptr<CompleteCommand>> _newlist)
-    :_cmplist(std::move(_newlist)){}
+    :_cmplist(std::move(_newlist)){_type = AST_PROGRAM;}
 
     void debug_print() {
         std::cout << "<MinSHProgram>" << std::endl;
+        std::cout << "CMD count: " << _cmplist.size() << std::endl;
         for(auto cmp : _cmplist) {
             cmp->debug_print();
         }
         std::cout << "<\\MinSHProgram>" << std::endl;
     }
 };
-
-
-
-
-
-
-
-
-
 
 
 #endif

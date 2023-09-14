@@ -4,10 +4,6 @@
 #include "ast.h"
 #include "prs.tab.hh"
 
-typedef enum ASTType{
-
-} node_type;
-
 typedef enum RedirectionType {
     RD_LESS,            // <
     RD_GREAT,           // >
@@ -21,6 +17,10 @@ typedef enum RedirectionType {
 } rd_type;
 
 extern std::shared_ptr<MinSHProgram> g_progAST;
+
+namespace yy {
+    parser::symbol_type yylex();
+};
 
 /* TODO: design parser functions */
 

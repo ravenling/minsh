@@ -1,7 +1,6 @@
-#include "prs.tab.hh"
-#include "location.hh"
+#include "parser.h"
 
-using namespace yy;
+namespace yy {
 
 /* TODO: implement yylex */
 parser::symbol_type yylex(){
@@ -21,15 +20,22 @@ parser::symbol_type yylex(){
         return parser::make_WORD(std::string("hello"), tmploc);
         break;
     case 2:
-        return parser::symbol_type('>', tmploc);
+        //return parser::symbol_type('>', tmploc);
+        return parser::make_DGREAT(1, tmploc);
         break;
     case 3:
         return parser::make_WORD(std::string("./a.out"), tmploc);
         break; 
     case 4:
+        return parser::make_YYEOF(tmploc);
+        break;
     default:
         break;
     }
 
     return parser::make_YYerror(tmploc);
+}
+
+
+
 }

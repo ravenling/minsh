@@ -1,11 +1,11 @@
-#ifndef SHOW_P_H
-#define SHOW_P_H
+#ifndef SHOWP_H
+#define SHOWP_H
 
 #include <pwd.h>
 #include <unistd.h>
 #include <string>
 #include <iostream>
-
+std::string home_dir;
 /* init cmd prompt */
 bool show_prompt(){
     /* get user information */
@@ -16,7 +16,6 @@ bool show_prompt(){
     getcwd(cwd_buf,1024);
     std::string cwd = cwd_buf;
     /* home_dir */
-    std::string home_dir;
     if(user_name == "root"){
         home_dir = "/root";
     }else{

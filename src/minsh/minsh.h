@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 #include <debug/dbg.h>
-
+#include <vector>
 /* TODO: complete the MinSH class */
 
 class MinSH{
@@ -13,7 +13,6 @@ private:
 
     static std::string _pwd;
     static std::map<std::string, std::string> _alias;
-
 public:
 
     static void set_pwd(std::string & _newpwd) {_pwd = std::string(_newpwd);}

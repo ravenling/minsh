@@ -1,7 +1,6 @@
 #include "builtin.h"
-#include <minsh/minsh.h>
+#include <minsh/showp.h>
 #include <iostream>
-
 void buildin_cmd_init()
 {
     p_cd = p_cd_function;

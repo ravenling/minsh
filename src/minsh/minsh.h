@@ -4,15 +4,29 @@
 #include <map>
 #include <string>
 #include <debug/dbg.h>
+<<<<<<< HEAD
 #include <vector>
+=======
+#include <common.h>
+
+>>>>>>> 458553823d47d407e5ac8fd3f1b2bb4699763f05
 /* TODO: complete the MinSH class */
 
 class MinSH{
 
 private:
 
+    // PWD
     static std::string _pwd;
+    // Alias
     static std::map<std::string, std::string> _alias;
+<<<<<<< HEAD
+=======
+
+    // Input Buffer
+    static char buf[CONFIG_BUF_SIZE];
+
+>>>>>>> 458553823d47d407e5ac8fd3f1b2bb4699763f05
 public:
 
     static void set_pwd(std::string & _newpwd) {_pwd = std::string(_newpwd);}

@@ -4,6 +4,7 @@
 /* Define MinSH's static members */
 std::string MinSH::_pwd;
 std::map<std::string, std::string> MinSH::_alias;
+char buf[CONFIG_BUF_SIZE];
 /* Main loop */
 int minsh_main_loop() {
 

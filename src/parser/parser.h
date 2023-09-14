@@ -16,7 +16,7 @@ typedef enum RedirectionType {
     RD_CLOBBER,         // >|
 } rd_type;
 
-extern std::shared_ptr<MinSHProgram> g_progAST;
+extern std::shared_ptr<CompleteCommand> g_cmdAST;
 
 namespace yy {
     parser::symbol_type yylex();
@@ -26,7 +26,10 @@ namespace yy {
 
 /**
  * @param
- * @return
+ * @return      0: success ; 1: error ; -1: read more 
+ * @brief       
  **/
+
+
 
 #endif

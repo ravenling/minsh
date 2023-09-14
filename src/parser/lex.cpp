@@ -27,7 +27,7 @@ parser::symbol_type yylex(){
         return parser::make_WORD(std::string("./a.out"), tmploc);
         break; 
     case 4:
-        return parser::make_YYEOF(tmploc);
+        return parser::make_NEWLINE("", tmploc);
         break;
     default:
         break;

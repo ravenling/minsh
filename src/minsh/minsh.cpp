@@ -4,7 +4,9 @@
 /* Define MinSH's static members */
 std::string MinSH::_pwd;
 std::map<std::string, std::string> MinSH::_alias;
-char buf[CONFIG_BUF_SIZE];
+char MinSH::_buf[CONFIG_BUF_MEM_SIZE];
+uint32_t MinSH::_bHead, MinSH::_bTail;
+std::vector<std::shared_ptr<CompleteCommand>> MinSH::_cmds;
 
 /* Main loop */
 int minsh_main_loop() {

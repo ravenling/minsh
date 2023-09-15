@@ -9,3 +9,8 @@ MinSH核心错误
 主循环错误：
 200     -- 主循环错误，原因未知
 201     -- prompt错误
+
+解析器错误：
+300     -- 解析器错误，原因未知
+301     -- Tokenizer 错误
+302     -- Grammer Conversion 错误

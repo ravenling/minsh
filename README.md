@@ -13,8 +13,9 @@ cmdexec     - command executor
 minsh       - main loop    
 # current goal
 1.  Basic main loop
-2.  Parser (lex & require to be fixed)
-3.  Builtin "echo" command
+2.  Parser (error handling & history)
+3.  cmdexec
+4.  Builtin "echo" command
 # how to build
 1.  cd to /minsh
 2.  enter make to build

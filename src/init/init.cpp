@@ -10,7 +10,10 @@ bool init_alias();
 
 bool minsh_init() {
     
+    MinSH::init_buf();
+
     Assert(init_alias(), "Init_alias failed", 101);
+
 
     return true;
 }

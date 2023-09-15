@@ -195,7 +195,6 @@ struct AndOrCommand final : public ASTNode {
     }
 
 };
-
 struct CompleteCommand final : public ASTNode {
     std::vector <std::shared_ptr<AndOrCommand>> _andorlist;
 

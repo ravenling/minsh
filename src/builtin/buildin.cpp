@@ -1,14 +1,15 @@
 #include "builtin.h"
 #include <minsh/showp.h>
 #include <iostream>
+#include <string>
 void buildin_cmd_init()
 {
     p_cd = p_cd_function;
     p_quit = p_quit_function;
     p_history = p_history_function;
-    buildin_cmd.insert(pair<std::string, int(*)>("cd", p_cd));
-    buildin_cmd.insert(pair<std::string, int(*)>("quit", p_quit));
-    buildin_cmd.insert(pair<std::string, int(*)>("history", p_history));
+    buildin_cmd.insert(std::pair<std::string, int(*)> (static_cast<std::string>("cd"), p_cd));
+    buildin_cmd.insert(std::pair<std::string, int(*)> (static_cast<std::string>("quit"), p_quit));
+    buildin_cmd.insert(std::pair<std::string, int(*)> (static_cast<std::string>("history"), p_history));
 }
 
 void show_buildin_cmd()
@@ -29,7 +30,7 @@ int p_cd_function(std::string cmd)
     else
     {
         cmd = cmd.substr(2, std::string::npos);
-        while (cmd[0] == " ")
+        while (cmd.at(0) == ' ')
         {
             cmd.erase(0, 1);
         }
@@ -56,7 +57,7 @@ int p_history_function(std::string cmd)
     else
     {
         cmd = cmd.substr(7, std::string::npos);
-        while (cmd[0] == " ")
+        while (cmd.at(0) == ' ')
         {
             cmd.erase(0, 1);
         }
@@ -66,7 +67,7 @@ int p_history_function(std::string cmd)
         }
         auto it = cmd_history.end();
         it -= (num_history - 1) ;
-        for (; it != cmd_history.end())
+        for (; it != cmd_history.end(); it++)
         {
             std::cout << *it << std::endl;
         }

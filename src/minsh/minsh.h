@@ -3,7 +3,10 @@
 
 #include <map>
 #include <string>
+#include <vector>
+#include <memory>
 #include <debug/dbg.h>
+#include <parser/parser.h>
 #include <common.h>
 
 /* TODO: complete the MinSH class */
@@ -18,12 +21,25 @@ private:
     static std::map<std::string, std::string> _alias;
 
     // Input Buffer
-    static char buf[CONFIG_BUF_SIZE];
+    static char _buf[CONFIG_BUF_MEM_SIZE];
+    static uint32_t _bHead, _bTail;
+    // Complete Commands
+    static std::shared_ptr<CompleteCommand> _cmd;
+
+    // History
+    static std::string _currentHis;
+    static std::string _history[CONFIG_HISTORY_MEM_SIZE];
+    static uint32_t _hHead, _hTail;
 
 public:
 
+    /* PWD */
+
     static void set_pwd(std::string & _newpwd) {_pwd = std::string(_newpwd);}
     static std::string get_pwd() {return _pwd;}
+
+    /* Alias */
+
     static std::string get_alias(std::string & _cmd) {return _alias[_cmd];}
     static void set_alias(std::string & _ali, std::string & _cmd) {
         Assert(_ali.size() > 0 && _cmd.size() > 0, "Parameter \"_ali\" and \"_cmd\" in \"set_alias\" cannot be empty string", 201);
@@ -41,6 +57,99 @@ public:
                 _alias.erase(_ali);
             }
         }
+    }
+
+    /* Input buffer */
+
+    static void init_buf() {_bHead = _bTail = 0;}
+    static void reset_buf() {init_buf();}
+    static uint32_t get_buf_count() {
+        if(_bHead <= _bTail) {
+            return _bTail - _bHead;
+        }
+        else {
+            return CONFIG_BUF_MEM_SIZE - (_bHead - _bTail);
+        }
+    }
+    static bool write_buf(const char *_s, uint32_t _count) {
+        if(_count > CONFIG_BUF_SIZE - get_buf_count()) {
+            Panic("Command buffer memory exhausted", 0, 0);
+            return false;
+        }
+        else {
+            for(uint32_t i = 0; i < _count; i++) {
+                _buf[_bTail] = _s[i];
+                _bTail = (_bTail + 1) % CONFIG_BUF_MEM_SIZE;
+            }
+        }
+        return true;
+    }
+    static bool pop_buf() {
+        if(get_buf_count() <= 0) {
+            Panic("Command buffer pop after empty", 0, 0);
+            return false;
+        }
+        push_current_his(read_buf());   // current history
+        _bHead = (_bHead + 1) % CONFIG_BUF_MEM_SIZE;
+        return true;
+    }
+    static char read_buf() {
+        if(get_buf_count() <= 0) {
+            Panic("Command buffer read after empty", 0, 0);
+            return 0;
+        }
+        else {
+            return _buf[_bHead];
+        }
+    }
+    static void debug_print_buf() {
+        uint32_t bufLen = get_buf_count();
+        printf("MinSH::_buf content:\n");
+        for(uint32_t i = 0; i < bufLen; i++) {
+            printf("%c", _buf[(i+_bHead)%CONFIG_BUF_MEM_SIZE]);
+        }
+        printf("\n");
+        printf("MinSH::_buf content ends\n");
+    }
+
+    /* CMD */
+    static void set_cmpcmd(std::shared_ptr<CompleteCommand> _newcmd) {_cmd = _newcmd;}
+    static std::shared_ptr<CompleteCommand> get_cmpcmd() {return _cmd;}
+
+    /* history */
+    static void init_current_his() {_currentHis.clear();}
+    static void init_history() {_hHead = _hTail = 0;}
+    static uint32_t get_his_count() {
+        if(_hHead <= _hTail) {
+            return _hTail - _hHead;
+        }
+        else {
+            return CONFIG_HISTORY_MEM_SIZE - (_hHead - _hTail);
+        }
+    }
+    static bool push_current_his(char _c) {
+        _currentHis.push_back(_c);
+        return true;
+    }
+    static bool add_history() {
+        if(get_his_count() >= CONFIG_HISTORY_SIZE) {
+            _hHead = (_hHead + 1) % CONFIG_HISTORY_MEM_SIZE;
+        }
+        while(_currentHis.size() > 0 && _currentHis.back() == '\n') {     // remove \n
+            _currentHis.pop_back();
+        }
+        _history[_hTail] = _currentHis;
+        _hTail = (_hTail + 1) % CONFIG_HISTORY_MEM_SIZE;
+        return true;
+    }
+    static std::string get_history(uint32_t _count) {
+        if(_count == 0) {
+            return _currentHis;
+        }
+        if(_count > get_his_count()) {
+            return "";
+        }
+        return _history[(_hTail-_count+CONFIG_HISTORY_MEM_SIZE) % CONFIG_HISTORY_MEM_SIZE];
     }
 
 };

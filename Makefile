@@ -6,6 +6,7 @@
 SHELL:=bash
 
 # directories
+PWD=$(shell pwd)
 SRC_DIR=./src
 BUILD_DIR=./build
 OBJ_DIR=$(BUILD_DIR)/obj
@@ -17,8 +18,8 @@ EXENAME=minsh
 CC=g++
 CFLAGS=-Wall -Werror -Isrc -g 
 INC_PATH?=
-SRCS=$(shell find $(abspath ./src) -name "*.c" -or -name "*.cpp")
-OBJS=$(addprefix $(OBJ_DIR)/, $(notdir $(SRCS:.cpp=.o)))
+SRCS=$(shell find $(abspath ./src) -name "*.cpp")
+OBJS=$(addprefix $(OBJ_DIR)/, $(notdir $(SRCS:%.cpp=%.o))) $(OBJ_DIR)/prs.tab.o
 
 # target
 BIN=$(BUILD_DIR)/$(EXENAME)
@@ -43,16 +44,20 @@ $(OBJ_DIR)/dbg.o: $(SRC_DIR)/debug/dbg.cpp
 $(OBJ_DIR)/init.o: $(SRC_DIR)/init/init.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
 
+$(OBJ_DIR)/parser.o: $(SRC_DIR)/parser/parser.cpp
+	$(CC) -c $(CFLAGS) $^ -o $@
+
+$(OBJ_DIR)/lex.o: $(SRC_DIR)/parser/lex.cpp
+	$(CC) -c $(CFLAGS) $^ -o $@
+
+$(OBJ_DIR)/prs.tab.o: $(SRC_DIR)/parser/prs.tab.cc
+	$(CC) -c $(CFLAGS) $^ -o $@
+
 $(OBJ_DIR)/minsh.o: $(SRC_DIR)/minsh/minsh.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
 
-
-
-#bison -dv -Wcounterexamples prs.y
-
-
-#$(OBJ_DIR)/parser.o: $(SRC_DIR)/parser/parser.cpp
-#	$(CC) -c $(CFLAGS) $< -o $@
+$(SRC_DIR)/parser/prs.tab.cc: $(SRC_DIR)/parser/prs.y
+	cd $(SRC_DIR)/parser/ && bison -dv -Wcounterexamples prs.y
 
 # run
 run: $(BIN)

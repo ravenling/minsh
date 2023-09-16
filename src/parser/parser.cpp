@@ -4,6 +4,9 @@
 std::shared_ptr<CompleteCommand> cmdAST;
 
 bool read_command() {
+    // reset current history
+    MinSH::init_current_his();
+
     // reset location for yy::parser::error
     ploc.initialize();
 
@@ -18,8 +21,11 @@ bool read_command() {
     // set to MinSH
     MinSH::set_cmpcmd(cmdAST);
 
+    // add history
+    MinSH::add_history();
+
     // debug print
-    MinSH::get_cmpcmd()->debug_print();
+    //MinSH::get_cmpcmd()->debug_print();
 
     return true;
 }

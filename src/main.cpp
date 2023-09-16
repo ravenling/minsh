@@ -1,6 +1,7 @@
 #include <common.h>
 #include <debug/dbg.h>
 #include <init/init.h>
+#include <minsh/minsh.h>
 #include <map>
 #include <string>
 
@@ -19,6 +20,7 @@ int main(int argc, char **argv) {
     Assert(minsh_init(), "Init failed", 100);
     
     /* TODO: Main Loop */
+    minsh_main_loop();
 
     return 0;
 }

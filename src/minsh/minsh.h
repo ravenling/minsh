@@ -6,8 +6,7 @@
 #include <vector>
 #include <memory>
 #include <debug/dbg.h>
-//#include <parser/parser.h>
-#include "../parser/parser.h"
+#include <parser/parser.h>
 #include <common.h>
 
 /* TODO: complete the MinSH class */
@@ -26,6 +25,11 @@ private:
     static uint32_t _bHead, _bTail;
     // Complete Commands
     static std::shared_ptr<CompleteCommand> _cmd;
+
+    // History
+    static std::string _currentHis;
+    static std::string _history[CONFIG_HISTORY_MEM_SIZE];
+    static uint32_t _hHead, _hTail;
 
 public:
 
@@ -85,6 +89,7 @@ public:
             Panic("Command buffer pop after empty", 0, 0);
             return false;
         }
+        push_current_his(read_buf());   // current history
         _bHead = (_bHead + 1) % CONFIG_BUF_MEM_SIZE;
         return true;
     }
@@ -110,6 +115,42 @@ public:
     /* CMD */
     static void set_cmpcmd(std::shared_ptr<CompleteCommand> _newcmd) {_cmd = _newcmd;}
     static std::shared_ptr<CompleteCommand> get_cmpcmd() {return _cmd;}
+
+    /* history */
+    static void init_current_his() {_currentHis.clear();}
+    static void init_history() {_hHead = _hTail = 0;}
+    static uint32_t get_his_count() {
+        if(_hHead <= _hTail) {
+            return _hTail - _hHead;
+        }
+        else {
+            return CONFIG_HISTORY_MEM_SIZE - (_hHead - _hTail);
+        }
+    }
+    static bool push_current_his(char _c) {
+        _currentHis.push_back(_c);
+        return true;
+    }
+    static bool add_history() {
+        if(get_his_count() >= CONFIG_HISTORY_SIZE) {
+            _hHead = (_hHead + 1) % CONFIG_HISTORY_MEM_SIZE;
+        }
+        while(_currentHis.size() > 0 && _currentHis.back() == '\n') {     // remove \n
+            _currentHis.pop_back();
+        }
+        _history[_hTail] = _currentHis;
+        _hTail = (_hTail + 1) % CONFIG_HISTORY_MEM_SIZE;
+        return true;
+    }
+    static std::string get_history(uint32_t _count) {
+        if(_count == 0) {
+            return _currentHis;
+        }
+        if(_count > get_his_count()) {
+            return "";
+        }
+        return _history[(_hTail-_count+CONFIG_HISTORY_MEM_SIZE) % CONFIG_HISTORY_MEM_SIZE];
+    }
 
 };
 

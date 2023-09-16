@@ -25,12 +25,16 @@ private:
     static char _buf[CONFIG_BUF_MEM_SIZE];
     static uint32_t _bHead, _bTail;
     // Complete Commands
-    static std::vector<std::shared_ptr<CompleteCommand>> _cmds;
+    static std::shared_ptr<CompleteCommand> _cmd;
 
 public:
 
+    /* PWD */
+
     static void set_pwd(std::string & _newpwd) {_pwd = std::string(_newpwd);}
     static std::string get_pwd() {return _pwd;}
+
+    /* Alias */
 
     static std::string get_alias(std::string & _cmd) {return _alias[_cmd];}
     static void set_alias(std::string & _ali, std::string & _cmd) {
@@ -50,6 +54,8 @@ public:
             }
         }
     }
+
+    /* Input buffer */
 
     static void init_buf() {_bHead = _bTail = 0;}
     static uint32_t get_buf_count() {
@@ -99,6 +105,10 @@ public:
         printf("\n");
         printf("MinSH::_buf content ends\n");
     }
+
+    /* CMD */
+    static void set_cmpcmd(std::shared_ptr<CompleteCommand> _newcmd) {_cmd = _newcmd;}
+    static std::shared_ptr<CompleteCommand> get_cmpcmd() {return _cmd;}
 
 };
 

@@ -7,6 +7,7 @@
 #include <map>
 
 // TODO: change this include
+#include <minsh/minsh.h>
 #include "../config.h"
 #include "../minsh/minsh.h"
 
@@ -51,6 +52,15 @@ std::map<std::string, uint8_t> rs_tab= {
 
 };
 
+void next_ploc(char _c) {
+    if(_c == '\n') {
+        ploc.lines(1);
+    }
+    else{
+        ploc.columns(1);
+    }
+}
+
 bool is_operator(std::string &_str);
 bool is_op_begin(char _c);
 bool is_assign(std::string &_str);
@@ -58,11 +68,16 @@ bool is_reserve(std::string &_str);
 
 bool cmdFlag = false;
 
-yy::parser::location_type loc;
+yy::parser::location_type ploc;
+
+inline void accept_char(char _c, Token &_token) {
+    _token._val.push_back(_c);
+    next_ploc(_c);
+}
 
 namespace yy {
 
-/* TODO: implement yylex */
+/* TODO: loc */
 parser::symbol_type yylex(){
     
     // Step 1: tokenize
@@ -75,93 +90,96 @@ parser::symbol_type yylex(){
     // Step 3: to symbol_type
     parser::symbol_type newSymbol = get_symbol(newToken);
 
+    // Step 4: update location
+    ploc.step();
+
     return newSymbol;
 }
 
 parser::symbol_type get_symbol(Token &_token) {
     switch (_token._type) {
     case TK_NEW:
-        return parser::make_YYerror(loc); break;
+        return parser::make_YYerror(ploc); break;
     case TK_WORD:
-        return parser::make_WORD(_token._val, loc); break;
+        return parser::make_WORD(_token._val, ploc); break;
     case TK_ASSIGNMENT_WORD:
-        return parser::make_ASSIGNMENT_WORD(_token._val, loc); break;
+        return parser::make_ASSIGNMENT_WORD(_token._val, ploc); break;
     case TK_NAME:
-        return parser::make_NAME(_token._val, loc); break;
+        return parser::make_NAME(_token._val, ploc); break;
     case TK_NEWLINE:
-        return parser::make_NEWLINE(_token._val, loc); break;
+        return parser::make_NEWLINE(_token._val, ploc); break;
     case TK_IO_NUMBER:
-        return parser::make_IO_NUMBER((int8_t)(std::stoi(_token._val)), loc); break;
+        return parser::make_IO_NUMBER((int8_t)(std::stoi(_token._val)), ploc); break;
     case TK_OPERATOR:
         switch(op_tab[_token._val]) {
             case RD_LESS:
-                return parser::symbol_type('<', loc); break;
+                return parser::symbol_type('<', ploc); break;
             case RD_GREAT:
-                return parser::symbol_type('>', loc); break;
+                return parser::symbol_type('>', ploc); break;
             case RD_DLESS:
-                return parser::make_DLESS(RD_DLESS, loc); break;
+                return parser::make_DLESS(RD_DLESS, ploc); break;
             case RD_DGREAT:
-                return parser::make_DGREAT(RD_DGREAT, loc); break;
+                return parser::make_DGREAT(RD_DGREAT, ploc); break;
             case RD_LESSAND:
-                return parser::make_LESSAND(RD_LESSAND, loc); break;
+                return parser::make_LESSAND(RD_LESSAND, ploc); break;
             case RD_GREATAND:
-                return parser::make_GREATAND(RD_GREATAND, loc); break;
+                return parser::make_GREATAND(RD_GREATAND, ploc); break;
             case RD_LESSGREAT:
-                return parser::make_LESSGREAT(RD_LESSGREAT, loc); break;
+                return parser::make_LESSGREAT(RD_LESSGREAT, ploc); break;
             case RD_DLESSDASH:
-                return parser::make_DLESSDASH(RD_DLESSDASH, loc); break;
+                return parser::make_DLESSDASH(RD_DLESSDASH, ploc); break;
             case RD_CLOBBER:
-                return parser::make_CLOBBER(RD_CLOBBER, loc); break;
+                return parser::make_CLOBBER(RD_CLOBBER, ploc); break;
             case OP_DAND:
-                return parser::make_AND_IF(OP_DAND, loc); break;
+                return parser::make_AND_IF(OP_DAND, ploc); break;
             case OP_DPIPE:
-                return parser::make_OR_IF(OP_DPIPE, loc); break;
+                return parser::make_OR_IF(OP_DPIPE, ploc); break;
             case OP_PIPE:
-                return parser::symbol_type('|', loc); break;
+                return parser::symbol_type('|', ploc); break;
             case OP_BANG:
-                return parser::symbol_type('!', loc); break;
+                return parser::symbol_type('!', ploc); break;
             case OP_AND:
-                return parser::symbol_type('&', loc); break;
+                return parser::symbol_type('&', ploc); break;
             case OP_SEMICOLON:
-                return parser::symbol_type(';', loc); break;
+                return parser::symbol_type(';', ploc); break;
             case OP_LBRACE:
-                return parser::make_Lbrace(loc); break;
+                return parser::make_Lbrace(ploc); break;
             case OP_RBRACE:
-                return parser::make_Rbrace(loc); break;
+                return parser::make_Rbrace(ploc); break;
         default:
-            return parser::make_YYerror(loc);
+            return parser::make_YYerror(ploc);
         }
         break;
     case TK_CASE:
-        return parser::make_Case(loc); break;
+        return parser::make_Case(ploc); break;
     case TK_DO:
-        return parser::make_Do(loc); break;
+        return parser::make_Do(ploc); break;
     case TK_DONE:
-        return parser::make_Done(loc); break;
+        return parser::make_Done(ploc); break;
     case TK_ELIF:
-        return parser::make_Elif(loc); break;
+        return parser::make_Elif(ploc); break;
     case TK_ELSE:
-        return parser::make_Else(loc); break;
+        return parser::make_Else(ploc); break;
     case TK_ESAC:
-        return parser::make_Esac(loc); break;
+        return parser::make_Esac(ploc); break;
     case TK_FI:
-        return parser::make_Fi(loc); break;
+        return parser::make_Fi(ploc); break;
     case TK_FOR:
-        return parser::make_For(loc); break;
+        return parser::make_For(ploc); break;
     case TK_IF:
-        return parser::make_If(loc); break;
+        return parser::make_If(ploc); break;
     case TK_IN:
-        return parser::make_In(loc); break;
+        return parser::make_In(ploc); break;
     case TK_THEN:
-        return parser::make_Then(loc); break;
+        return parser::make_Then(ploc); break;
     case TK_UNTIL:
-        return parser::make_Until(loc); break;
+        return parser::make_Until(ploc); break;
     case TK_WHILE:
-        return parser::make_While(loc); break;
+        return parser::make_While(ploc); break;
     default:
-        return parser::make_YYerror(loc);
+        return parser::make_YYerror(ploc);
     }
-    return parser::make_YYerror(loc);
+    return parser::make_YYerror(ploc);
 }
 
 };
@@ -260,6 +278,7 @@ Token get_token() {
             if(newToken._type == TK_NEW) {
                 newToken._type = TK_NEWLINE;
                 newToken._delim = -1;
+                accept_char(c, newToken);
                 MinSH::pop_buf();
             }
             else {
@@ -275,7 +294,7 @@ Token get_token() {
             std::string tmpStr(newToken._val);
             tmpStr.push_back(c);
             if(is_operator(tmpStr)) {
-                newToken._val.push_back(c);
+                accept_char(c, newToken);
                 MinSH::pop_buf();
                 continue;
             }
@@ -293,7 +312,8 @@ Token get_token() {
         if(is_op_begin(c)) {
             if(newToken._type == TK_NEW) {
                 newToken._type = TK_OPERATOR;
-                newToken._val.push_back(c);
+                accept_char(c, newToken);
+                ploc.step();
                 MinSH::pop_buf();
                 continue;
             }
@@ -306,11 +326,13 @@ Token get_token() {
         // rule 7 -- blank delim
         if(isblank(c)) {
             if(newToken._type == TK_NEW) {
+                next_ploc(c);
                 MinSH::pop_buf();
                 continue;
             }
             else {
                 newToken._delim = c;
+                next_ploc(c);
                 MinSH::pop_buf();
                 return newToken;
             }
@@ -318,7 +340,7 @@ Token get_token() {
 
         // rule 8 -- word append
         if(newToken._type == TK_WORD) {
-            newToken._val.push_back(c);
+            accept_char(c, newToken);
             MinSH::pop_buf();
             continue;
         }
@@ -328,7 +350,7 @@ Token get_token() {
         // rule 10 -- new word
         if(1) {
             newToken._type = TK_WORD;
-            newToken._val.push_back(c);
+            accept_char(c, newToken);
             MinSH::pop_buf();
             continue;
         }

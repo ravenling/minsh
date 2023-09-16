@@ -7,13 +7,7 @@ int main() {
 
     while(1) {
 
-        yy::parser test_parser;
-        std::cout << "parser created" << std::endl;
-        test_parser();
-        std::cout << "token parsed" << std::endl;
-
-        g_cmdAST->debug_print();
-        std::cout << "ast printed" << std::endl;
+        read_command();
         
     }
 

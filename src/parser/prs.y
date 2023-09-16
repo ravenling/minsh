@@ -115,12 +115,12 @@ complete_commands   :   complete_commands   newline_list    complete_command
 complete_command    :   list    separator_op
                         {
                             (*$1.rbegin())->_isasync = ($2 == '&');
-                            g_cmdAST = std::make_shared<CompleteCommand>($1);
+                            cmdAST = std::make_shared<CompleteCommand>($1);
                             YYACCEPT;
                         }
                     |   list
                         {
-                            g_cmdAST = std::make_shared<CompleteCommand>($1);
+                            cmdAST = std::make_shared<CompleteCommand>($1);
                             YYACCEPT;
                         }
                     ;

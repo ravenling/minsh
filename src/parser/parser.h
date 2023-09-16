@@ -61,16 +61,13 @@ typedef enum OperatorType {
 
 } op_type;
 
-extern std::shared_ptr<CompleteCommand> g_cmdAST;
-
-// TODO: delete this, replace it with MinSH::_cmd
-extern std::vector<std::shared_ptr<CompleteCommand>> g_cmds;
+extern std::shared_ptr<CompleteCommand> cmdAST;
 
 namespace yy {
     parser::symbol_type yylex();
 };
 
-/* TODO: design parser functions */
+extern yy::parser::location_type ploc;
 
 namespace yy {
 /**

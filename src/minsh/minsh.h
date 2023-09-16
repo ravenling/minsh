@@ -58,6 +58,7 @@ public:
     /* Input buffer */
 
     static void init_buf() {_bHead = _bTail = 0;}
+    static void reset_buf() {init_buf();}
     static uint32_t get_buf_count() {
         if(_bHead <= _bTail) {
             return _bTail - _bHead;

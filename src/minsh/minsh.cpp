@@ -6,7 +6,7 @@ std::string MinSH::_pwd;
 std::map<std::string, std::string> MinSH::_alias;
 char MinSH::_buf[CONFIG_BUF_MEM_SIZE];
 uint32_t MinSH::_bHead, MinSH::_bTail;
-std::vector<std::shared_ptr<CompleteCommand>> MinSH::_cmds;
+std::shared_ptr<CompleteCommand> MinSH::_cmd;
 
 /* Main loop */
 int minsh_main_loop() {

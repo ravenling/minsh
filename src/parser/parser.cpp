@@ -19,7 +19,7 @@ bool read_command() {
     }
 
     // set to MinSH
-    MinSH::set_cmpcmd(cmdAST);
+    MinSH::set_cmd(cmdAST);
 
     // add history
     MinSH::add_history();

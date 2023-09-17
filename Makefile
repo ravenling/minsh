@@ -53,11 +53,14 @@ $(OBJ_DIR)/lex.o: $(SRC_DIR)/parser/lex.cpp
 $(OBJ_DIR)/prs.tab.o: $(SRC_DIR)/parser/prs.tab.cc
 	$(CC) -c $(CFLAGS) $^ -o $@
 
+$(SRC_DIR)/parser/prs.tab.cc: $(SRC_DIR)/parser/prs.y
+	cd $(SRC_DIR)/parser/ && bison -dv -Wcounterexamples prs.y
+
 $(OBJ_DIR)/minsh.o: $(SRC_DIR)/minsh/minsh.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
 
-$(SRC_DIR)/parser/prs.tab.cc: $(SRC_DIR)/parser/prs.y
-	cd $(SRC_DIR)/parser/ && bison -dv -Wcounterexamples prs.y
+$(OBJ_DIR)/cmdexec.o: $(SRC_DIR)/cmdexec/cmdexec.cpp
+	$(CC) -c $(CFLAGS) $< -o $@
 
 # run
 run: $(BIN)

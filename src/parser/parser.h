@@ -105,6 +105,4 @@ bool read_newline();
  **/
 bool read_command();
 
-
-
 #endif

@@ -1,10 +1,13 @@
-#include "minsh.h"
-#include "showp.h"
+#include <minsh/minsh.h>
+#include <minsh/showp.h>
+#include <cmdexec/cmdexec.h>
 
 /* Define MinSH's static members */
 std::string MinSH::_pwd;
 
 std::map<std::string, std::string> MinSH::_alias;
+
+std::map<std::string, std::string> MinSH::_variable;
 
 char MinSH::_buf[CONFIG_BUF_MEM_SIZE];
 uint32_t MinSH::_bHead, MinSH::_bTail;
@@ -23,10 +26,7 @@ int minsh_main_loop() {
 
         read_command();
 
-        std::cout << "History count: " << MinSH::get_his_count() << std::endl;
-        for(uint32_t i = 1; i <= MinSH::get_his_count(); i++) {
-            std::cout << "#" << i << " " << MinSH::get_history(i) << std::endl;
-        }
+        exec_completecommand(MinSH::get_cmd());
 
     }
 

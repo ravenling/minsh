@@ -19,11 +19,13 @@ private:
     static std::string _pwd;
     // Alias
     static std::map<std::string, std::string> _alias;
+    // Variable
+    static std::map<std::string, std::string> _variable;
 
     // Input Buffer
     static char _buf[CONFIG_BUF_MEM_SIZE];
     static uint32_t _bHead, _bTail;
-    // Complete Commands
+    // Complete Command
     static std::shared_ptr<CompleteCommand> _cmd;
 
     // History
@@ -57,6 +59,15 @@ public:
                 _alias.erase(_ali);
             }
         }
+    }
+
+    /* Variable */
+    static void init_var() {_variable.clear();}
+    static void add_var(std::string &_var, std::string &_val) {
+        _variable[_var] = std::string(_val);
+    }
+    static std::string get_var(std::string &_var) {
+        return _variable[_var];
     }
 
     /* Input buffer */
@@ -113,8 +124,8 @@ public:
     }
 
     /* CMD */
-    static void set_cmpcmd(std::shared_ptr<CompleteCommand> _newcmd) {_cmd = _newcmd;}
-    static std::shared_ptr<CompleteCommand> get_cmpcmd() {return _cmd;}
+    static void set_cmd(std::shared_ptr<CompleteCommand> _newcmd) {_cmd = _newcmd;}
+    static std::shared_ptr<CompleteCommand> get_cmd() {return _cmd;}
 
     /* history */
     static void init_current_his() {_currentHis.clear();}
@@ -153,8 +164,6 @@ public:
     }
 
 };
-
-/* TODO: main loop frame work, use functions from parser.h */
 
 /**
  * @return      MinSH exit code

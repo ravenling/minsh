@@ -1,17 +1,34 @@
 #include "builtin.h"
-#include <minsh/showp.h>
 #include <iostream>
 #include <string>
-void buildin_cmd_init()
-{
-    p_cd = p_cd_function;
-    p_quit = p_quit_function;
-    p_history = p_history_function;
-    buildin_cmd.insert(std::pair<std::string, int(*)> (static_cast<std::string>("cd"), p_cd));
-    buildin_cmd.insert(std::pair<std::string, int(*)> (static_cast<std::string>("quit"), p_quit));
-    buildin_cmd.insert(std::pair<std::string, int(*)> (static_cast<std::string>("history"), p_history));
+
+void buildin_cmd_init() {
+    builtin_cmd_tab["echo"] = minsh_echo;
+    //buildin_cmd_tab["cd"] = minsh_change_directory;
+
+
+
+    return;
 }
 
+int minsh_echo(std::vector<std::string> _args) {
+    for(auto s : _args) {
+        std::cout << s;
+    }
+    std::cout << std::endl;
+    return 0;
+}
+
+int minsh_help(std::vector<std::string> _args);
+
+int minsh_change_directory(std::vector<std::string> _args);
+
+int minsh_quit(std::vector<std::string> _args);
+
+int minsh_history(std::vector<std::string> _args);
+
+
+/*
 void show_buildin_cmd()
 {
     for (auto &i : buildin_cmd)
@@ -73,3 +90,4 @@ int p_history_function(std::string cmd)
         }
     }
 }
+*/

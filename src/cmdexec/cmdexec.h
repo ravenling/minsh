@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <parser/ast.h>
+#include <builtin/builtin.h>
 
 /**
  * @param

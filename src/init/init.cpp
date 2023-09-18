@@ -1,5 +1,6 @@
 #include "init.h"
 #include <minsh/minsh.h>
+#include <builtin/builtin.h>
 #include <debug/dbg.h>
 #include <common.h>
 #include <string>
@@ -9,6 +10,8 @@ bool init_alias();
 /* TODO: implement minsh_init */
 
 bool minsh_init() {
+
+    buildin_cmd_init();
     
     MinSH::init_var();
     MinSH::init_buf();

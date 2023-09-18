@@ -1,4 +1,7 @@
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/wait.h>
+
 #include <vector>
 #include <minsh/minsh.h>
 #include <debug/dbg.h>
@@ -21,17 +24,54 @@ int exec_cmd(std::string _cmd, std::vector<std::string> _args , int _fd[10], boo
     /** TODO: find absolute path **/
 
 
+
+    Panic("couldn't find command", false, 406);
+    return 1;
 }
 
 int redirection_parse(std::shared_ptr<IORedirect> &_presuf, int _fd[10], bool _rd[10]) {
-    // create file
+    /* invalid io_number */
+    if(_presuf->_ionumber > 9 || _presuf->_ionumber < -1) {
+        Panic("invalid IO_NUMBER", false, 409);
+        return 1;
+    }
+    int fd;
 
-    
-
-
-    // 
-
-
+    /** TODO: create file **/
+    switch(_presuf->_iofile->_redirtype) {
+    case RD_GREAT:
+        fd = open(_presuf->_iofile->_filename.c_str(), O_WRONLY | O_CREAT);
+        MinSH::add_fd(fd);
+        if(_presuf->_ionumber == -1) {      // default
+            _rd[1] = true; _fd[1] = fd;
+        }
+        else {
+            _rd[_presuf->_ionumber] = true; _fd[_presuf->_ionumber] = fd;
+        }
+        break; 
+    case RD_LESS:
+        fd = open(_presuf->_iofile->_filename.c_str(), O_RDONLY);
+        if(fd == -1) {
+            Panic("no such file", false, 410);
+            return 1;
+        }
+        MinSH::add_fd(fd);
+        _rd[0] = true; _fd[0] = fd;
+        break;
+    case RD_DGREAT:
+        fd = open(_presuf->_iofile->_filename.c_str(), O_WRONLY | O_CREAT | O_APPEND);
+        MinSH::add_fd(fd);
+        if(_presuf->_ionumber == -1) {      // default
+            _rd[1] = true; _fd[1] = fd;
+        }
+        else {
+            _rd[_presuf->_ionumber] = true; _fd[_presuf->_ionumber] = fd;
+        }
+        break;
+    default:
+        Panic("redirection type not implemented", false, 408);
+        return 1;
+    }
 
     return 0;
 }
@@ -77,7 +117,27 @@ int prefix_parse(std::vector<std::shared_ptr<PrefixSuffix>> &_prefix, bool _only
 }
 
 int suffix_parse(std::vector<std::shared_ptr<PrefixSuffix>> &_suffix, std::vector<std::string> &_args, int _fd[10], bool _rd[10]) {
+    std::shared_ptr<PrefixSuffixWord> tmpword;
+    std::shared_ptr<IORedirect> tmprd;
 
+    for(auto suf : _suffix) {
+        switch(suf->_type) {
+        case AST_PRESUF_WORD:       // Arguments
+            tmpword = std::dynamic_pointer_cast<PrefixSuffixWord>(suf);
+            _args.push_back(tmpword->_word);
+            break;
+        case AST_IOREDIRECT:
+            tmprd = std::dynamic_pointer_cast<IORedirect>(suf);
+            if(redirection_parse(tmprd, _fd, _rd) != 0) {
+                return 1;
+            }
+            break;
+        default:
+            Panic("unknown suffix type", false, 404);
+            return 1;
+        }
+    }
+    return 0;
 }
 
 int exec_simplecommand(std::shared_ptr<SimpleCommand> _cmd, int _pipefd[2]) {
@@ -85,19 +145,41 @@ int exec_simplecommand(std::shared_ptr<SimpleCommand> _cmd, int _pipefd[2]) {
     bool rd[10];
     std::vector<std::string> args;
 
-    /** TODO: prefix  **/
+    for(int i = 0; i < 10; i++) {rd[i] = false;}
+    rd[0] = true; fd[0] = _pipefd[0];
+    rd[1] = true; fd[1] = _pipefd[1];
+
+    /* prefix  */
     if(prefix_parse(_cmd->_prefix, _cmd->_cmdword == "", fd, rd) != 0) {
         return 1;
     }
 
-    /** TODO: suffix  **/
+    /* suffix  */
+    if(suffix_parse(_cmd->_suffix, args, fd, rd) != 0) {
+        return 1;
+    }
 
+    /* no cmdname */
+    if(_cmd->_cmdword == "") {
+        return 0;
+    }
 
-
-
-
-
-
+    /* fork & exec */
+    pid_t subproc;
+    if((subproc = fork()) == -1) {
+        Panic("failed to create sub-process", false, 407);
+        return 1;
+    }
+    if(subproc == 0) { 
+        exit(exec_cmd(_cmd->_cmdword, args, fd, rd));
+    }
+    else {
+        int retVal;
+        waitpid(subproc, &retVal, 0);
+        return retVal;
+    }
+    
+    return 1;
 }
 
 int exec_command(std::shared_ptr<Command> _cmd, int _pipefd[2]) {
@@ -111,22 +193,39 @@ int exec_command(std::shared_ptr<Command> _cmd, int _pipefd[2]) {
         return 1;
     }
 
+    /* close redirection files */
+    MinSH::close_all_fd();
+
     return 0;
 }
 
 int exec_pipeline(std::shared_ptr<Pipeline> _cmd) {
     int pipefd[2];
-    // create pipe
-    if(pipe(pipefd) == -1) {
-        Panic("failed to create pipe", DEBUG_ERR, 401);
-        return 1;
-    }
+    pipefd[0] = STDIN_FILENO;       // init
 
     // execute command
-    /** TODO: pipeline redirect **/
     int retVal = 0;
-    for(auto cmd : _cmd->_cmdlist) {
+
+    for(size_t i = 0; i < _cmd->_cmdlist.size(); i++) {
+        auto cmd = _cmd->_cmdlist[i];
+
+        // new output
+        if(i == _cmd->_cmdlist.size() - 1) {
+            pipefd[1] = STDOUT_FILENO;
+        }
+        else {
+            // create a tmp file
+            pipefd[1] = open("/tmp", O_TMPFILE | O_RDWR);
+        }
+
         retVal = exec_command(cmd, pipefd);
+
+        // output -> next input
+        if(i != 0) {
+            close(pipefd[0]);
+            pipefd[0] = pipefd[1];
+        }
+
     }
 
     return  (_cmd->_bangpref) ?
@@ -140,7 +239,7 @@ int exec_andorcommand(std::shared_ptr<AndOrCommand> _cmd) {
     int retVal = 0;     // 0
 
     for(auto pipeline : _cmd->_pipelinelist) {
-        if(andor == -1 && retVal != 0 || andor == 1 && retVal == 0) {
+        if((andor == -1 && retVal != 0) || (andor == 1 && retVal == 0)) {
             andor = pipeline->_andorsuf;
             continue;
         }

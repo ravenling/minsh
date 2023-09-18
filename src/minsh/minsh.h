@@ -8,6 +8,7 @@
 #include <debug/dbg.h>
 #include <parser/parser.h>
 #include <common.h>
+#include <unistd.h>
 
 /* TODO: complete the MinSH class */
 
@@ -15,8 +16,6 @@ class MinSH{
 
 private:
 
-    // PWD
-    static std::string _pwd;
     // Alias
     static std::map<std::string, std::string> _alias;
     // Variable
@@ -28,17 +27,15 @@ private:
     // Complete Command
     static std::shared_ptr<CompleteCommand> _cmd;
 
+    // File Descripter
+    static std::vector<int> _fdPool;
+
     // History
     static std::string _currentHis;
     static std::string _history[CONFIG_HISTORY_MEM_SIZE];
     static uint32_t _hHead, _hTail;
 
 public:
-
-    /* PWD */
-
-    static void set_pwd(std::string & _newpwd) {_pwd = std::string(_newpwd);}
-    static std::string get_pwd() {return _pwd;}
 
     /* Alias */
 
@@ -126,6 +123,15 @@ public:
     /* CMD */
     static void set_cmd(std::shared_ptr<CompleteCommand> _newcmd) {_cmd = _newcmd;}
     static std::shared_ptr<CompleteCommand> get_cmd() {return _cmd;}
+
+    /* fd pool */
+    static void add_fd(int _fd) {_fdPool.push_back(_fd);}           /** WARNING: not safe ! **/
+    static void close_all_fd() {                                    /** WARNING: not safe ! **/
+        for(auto fd : _fdPool) {
+            close(fd);
+        }
+        _fdPool.clear();
+    }
 
     /* history */
     static void init_current_his() {_currentHis.clear();}

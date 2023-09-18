@@ -68,10 +68,18 @@ int redirection_parse(std::shared_ptr<IORedirect> &_presuf, int _fd[10], bool _r
     }
     int fd;
 
-    /** TODO: create file **/
+    /* create file */
     switch(_presuf->_iofile->_redirtype) {
     case RD_GREAT:
-        fd = open(_presuf->_iofile->_filename.c_str(), O_WRONLY | O_CREAT);
+        if((fd = open(_presuf->_iofile->_filename.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0666)) == -1) {
+            if(remove(_presuf->_iofile->_filename.c_str()) == 0) {
+                fd = open(_presuf->_iofile->_filename.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0666);
+            }
+        }
+        if(fd == -1) {
+            Panic("failed to create file", false, 412);
+            return 1;
+        }
         MinSH::add_fd(fd);
         if(_presuf->_ionumber == -1) {      // default
             _rd[1] = true; _fd[1] = fd;
@@ -81,7 +89,7 @@ int redirection_parse(std::shared_ptr<IORedirect> &_presuf, int _fd[10], bool _r
         }
         break; 
     case RD_LESS:
-        fd = open(_presuf->_iofile->_filename.c_str(), O_RDONLY);
+        fd = open(_presuf->_iofile->_filename.c_str(), O_RDONLY, 0666);
         if(fd == -1) {
             Panic("no such file", false, 410);
             return 1;
@@ -90,7 +98,11 @@ int redirection_parse(std::shared_ptr<IORedirect> &_presuf, int _fd[10], bool _r
         _rd[0] = true; _fd[0] = fd;
         break;
     case RD_DGREAT:
-        fd = open(_presuf->_iofile->_filename.c_str(), O_WRONLY | O_APPEND);
+        fd = open(_presuf->_iofile->_filename.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0666);
+        if(fd == -1) {
+            Panic("failed to create file", false, 412);
+            return 1;
+        }
         MinSH::add_fd(fd);
         if(_presuf->_ionumber == -1) {      // default
             _rd[1] = true; _fd[1] = fd;

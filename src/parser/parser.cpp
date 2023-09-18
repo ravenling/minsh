@@ -25,7 +25,7 @@ bool read_command() {
     MinSH::add_history();
 
     // debug print
-    //MinSH::get_cmpcmd()->debug_print();
+    //MinSH::get_cmd()->debug_print();
 
     return true;
 }

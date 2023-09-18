@@ -20,10 +20,13 @@ void buildin_cmd_init() {
 }
 
 int minsh_echo(std::vector<std::string> _args) {
-    for(size_t index = 0; index < _args.size() - 1; index++) {
-        std::cout << _args[index] << " ";
+    if(_args.size() != 0) {
+        for(size_t index = 0; index < _args.size() - 1; index++) {
+            std::cout << _args[index] << " ";
+        }
+        std::cout << _args.back();
     }
-    std::cout << _args.back() << std::endl;
+    std::cout << std::endl;
     return 0;
 }
 

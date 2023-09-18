@@ -11,15 +11,12 @@ std::ofstream g_log_file;
 #endif
 
 
-
 int main(int argc, char **argv) {
-    /* TODO: Config File */
-
 
     /* Initiating */
     Assert(minsh_init(), "Init failed", 100);
     
-    /* TODO: Main Loop */
+    /* Main Loop */
     minsh_main_loop();
 
     return 0;

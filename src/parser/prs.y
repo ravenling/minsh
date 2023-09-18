@@ -81,7 +81,6 @@ void parser::error(const parser::location_type &_locp, const std::string &_msg){
 
 /* -----------------------
    GRAMMER
-   reference: https://pubs.opengroup.org/onlinepubs/9699919799.2016edition/utilities/V3_chap02.html#tag_18_09_02
    ----------------------- */
 
 /*

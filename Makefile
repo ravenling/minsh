@@ -62,6 +62,9 @@ $(OBJ_DIR)/minsh.o: $(SRC_DIR)/minsh/minsh.cpp
 $(OBJ_DIR)/cmdexec.o: $(SRC_DIR)/cmdexec/cmdexec.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
 
+$(OBJ_DIR)/findcmd.o: $(SRC_DIR)/cmdexec/findcmd.cpp
+	$(CC) -c $(CFLAGS) $< -o $@
+
 $(OBJ_DIR)/builtin.o: $(SRC_DIR)/builtin/builtin.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
 

@@ -1,14 +1,43 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+#include <memory.h>
 
 #include <vector>
 #include <minsh/minsh.h>
 #include <debug/dbg.h>
 #include "cmdexec.h"
 
-// run this in sub-process
-int exec_cmd(std::string _cmd, std::vector<std::string> _args , int _fd[10], bool _rd[10]) {
+// run external binary
+int exec_external(std::string _cmd, std::vector<std::string> _args, int _fd[10], bool _rd[10]) {
+    /* redirection */
+    for(int i = 0; i < 10; i++) {
+        if(!_rd[i]) continue;
+        if(dup2(_fd[i], i) == -1) {
+            Panic("failed to duplicate file descriptor", false, 401);
+            return 1;
+        }
+    }
+
+    /* execl */
+    char **argv = new char*[_args.size()+2];
+    argv[0] = new char[_cmd.size() + 1];
+    strcpy(argv[0], _cmd.c_str());                  // file path
+    for(size_t i = 0; i < _args.size(); i++) {
+        argv[i+1] = new char[_args[i].size() + 1];
+        strcpy(argv[i+1], _args[i].c_str());
+    }
+    argv[_args.size()+1] = NULL;
+    
+    if(execv(_cmd.c_str(), argv) == -1) {
+        Panic("failed to execute external program", false, 414);
+        exit(1);
+    }
+ 
+    return 0;
+}
+
+int exec_cmd(std::string _cmd, std::vector<std::string> _args, int _fd[10], bool _rd[10]) {
     int retVal = 1;
     /* execute */
 
@@ -52,12 +81,30 @@ int exec_cmd(std::string _cmd, std::vector<std::string> _args , int _fd[10], boo
         return retVal;
     }
 
-    /** TODO: find absolute path **/
+    // find absolute path
+    std::string absPath = find_external_command(_cmd);
 
+    if(absPath.size() == 0) {
+        Panic("couldn't find command", false, 406);
+        return 1;
+    }
 
+    // fork & exec
+    pid_t subProc = fork();
+    if(subProc == -1) {
+        Panic("couldn't find command", false, 407);
+        return 1;
+    }
+    if(subProc == 0) {      // child
+        exec_external(absPath, _args, _fd, _rd);
+    } else {                // parent
+        if(waitpid(subProc, &retVal, 0) == -1) {
+            Panic("couldn't find command", false, 413);
+            return 1;
+        }
+    }
 
-    Panic("couldn't find command", false, 406);
-    return 1;
+    return retVal;
 }
 
 int redirection_parse(std::shared_ptr<IORedirect> &_presuf, int _fd[10], bool _rd[10]) {
@@ -137,7 +184,11 @@ int prefix_parse(std::vector<std::shared_ptr<PrefixSuffix>> &_prefix, bool _only
             tmpvar = tmpword->_word.substr(0, index);
             tmpval = tmpword->_word.substr(index+1, tmpword->_word.size());
             if(_onlyPrefix) {
-                MinSH::add_var(tmpvar, tmpval);
+                if(MinSH::_envVar.count(tmpvar) > 0) {
+                    MinSH::_envVar[tmpvar] = tmpval;
+                } else {
+                    MinSH::add_var(tmpvar, tmpval);
+                }
             }
             else {
                 /** TODO: local var **/
@@ -236,6 +287,7 @@ int exec_pipeline(std::shared_ptr<Pipeline> _cmd) {
     int retVal = 0;
 
     for(size_t i = 0; i < _cmd->_cmdlist.size(); i++) {
+
         auto cmd = _cmd->_cmdlist[i];
 
         // new output
@@ -244,7 +296,7 @@ int exec_pipeline(std::shared_ptr<Pipeline> _cmd) {
         }
         else {
             // create a tmp file
-            pipefd[1] = open("/tmp", O_TMPFILE | O_RDWR | O_CREAT);
+            pipefd[1] = open("/tmp", O_TMPFILE | O_RDWR);
             if(pipefd[1] == -1) {
                 Panic("failed to create tmp file", false, 401);
                 return 1;
@@ -256,8 +308,8 @@ int exec_pipeline(std::shared_ptr<Pipeline> _cmd) {
         // output -> next input
         if(i != 0) {
             close(pipefd[0]);
-            pipefd[0] = pipefd[1];
         }
+        pipefd[0] = pipefd[1];
 
     }
 

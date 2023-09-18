@@ -12,11 +12,11 @@ parser      - command line parser
 cmdexec     - command executor    
 minsh       - main loop    
 # current goal
-1.  Basic main loop
-2.  Parser (error handling & history)
-3.  cmdexec
-4.  Builtin "echo" command
+1.  cmdexec - pipeline
+2.  variable substitution
 # how to build
 1.  cd to /minsh
 2.  enter make to build
 3.  enter make run to build&run
+# reference
+https://pubs.opengroup.org/onlinepubs/9699919799.2016edition/utilities/V3_chap02.html

@@ -3,6 +3,8 @@
 #include <cmdexec/cmdexec.h>
 
 /* Define MinSH's static members */
+std::map<std::string, std::string> MinSH::_envVar;
+
 std::map<std::string, std::string> MinSH::_alias;
 
 std::map<std::string, std::string> MinSH::_variable;

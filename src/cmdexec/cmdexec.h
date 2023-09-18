@@ -6,7 +6,14 @@
 #include <builtin/builtin.h>
 
 /**
- * @param
+ * @param   command name/path
+ * @return  absolute path of cmd, return "" when fail
+ * @brief   find where command is
+ **/
+std::string find_external_command(std::string _cmdname);
+
+/**
+ * @param   command
  * @return  0: success ; other: error
  * @brief   execute complete command
  **/

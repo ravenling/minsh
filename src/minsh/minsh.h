@@ -14,10 +14,15 @@
 
 class MinSH{
 
+public:
+
+    static std::map<std::string, std::string> _envVar;
+
 private:
 
     // Alias
     static std::map<std::string, std::string> _alias;
+
     // Variable
     static std::map<std::string, std::string> _variable;
 

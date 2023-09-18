@@ -38,7 +38,6 @@ private:
 public:
 
     /* Alias */
-
     static std::string get_alias(std::string & _cmd) {return _alias[_cmd];}
     static void set_alias(std::string & _ali, std::string & _cmd) {
         Assert(_ali.size() > 0 && _cmd.size() > 0, "Parameter \"_ali\" and \"_cmd\" in \"set_alias\" cannot be empty string", 201);
@@ -176,5 +175,15 @@ public:
  * @brief       MinSH main loop
  **/
 int minsh_main_loop();
+
+/**
+ * @return      home dir
+ **/
+std::string get_home_dir();
+
+/**
+ * @return      prompt printed successfully or not
+ **/
+bool show_prompt();
 
 #endif

@@ -9,16 +9,47 @@
 
 // run this in sub-process
 int exec_cmd(std::string _cmd, std::vector<std::string> _args , int _fd[10], bool _rd[10]) {
-    /* duplicate fd to redirect */
-    for(int i = 0; i < 10; i++) {
-        if(!_rd[i]) continue;
-        dup2(_fd[i], i);
-    }
-
+    int retVal = 1;
     /* execute */
-    // check if it is builtin
+
+    // check if it is builtin, if it is, execute in the same process
     if(builtin_cmd_tab.count(_cmd) > 0) {
-        return builtin_cmd_tab[_cmd](_args);
+        /* backup fd table */
+        int fdBckup[10];
+        for(int i = 0; i < 10; i++) {
+            if(!_rd[i]) continue;
+            fdBckup[i] = open("/tmp", O_TMPFILE | O_RDWR);
+            if(fdBckup[i] == -1) {
+                Panic("failed to create tmp file", false, 401);
+                return 1;
+            }
+            if(dup2(i, fdBckup[i]) == -1) {
+                Panic("failed to duplicate file descriptor", false, 401);
+                return 1;
+            }
+        }
+
+        /* duplicate fd to redirect */
+        for(int i = 0; i < 10; i++) {
+            if(!_rd[i]) continue;
+            if(dup2(_fd[i], i) == -1) {
+                Panic("failed to duplicate file descriptor", false, 401);
+                return 1;
+            }
+        }
+
+        retVal = builtin_cmd_tab[_cmd](_args);
+        
+        /* recover fd table */
+        for(int i = 0; i < 10; i++) {
+            if(!_rd[i]) continue;
+            if(dup2(fdBckup[i], i) == -1) {
+                Panic("failed to duplicate file descriptor", false, 401);
+                return 1;
+            }
+        }
+
+        return retVal;
     }
 
     /** TODO: find absolute path **/
@@ -59,7 +90,7 @@ int redirection_parse(std::shared_ptr<IORedirect> &_presuf, int _fd[10], bool _r
         _rd[0] = true; _fd[0] = fd;
         break;
     case RD_DGREAT:
-        fd = open(_presuf->_iofile->_filename.c_str(), O_WRONLY | O_CREAT | O_APPEND);
+        fd = open(_presuf->_iofile->_filename.c_str(), O_WRONLY | O_APPEND);
         MinSH::add_fd(fd);
         if(_presuf->_ionumber == -1) {      // default
             _rd[1] = true; _fd[1] = fd;
@@ -164,22 +195,8 @@ int exec_simplecommand(std::shared_ptr<SimpleCommand> _cmd, int _pipefd[2]) {
         return 0;
     }
 
-    /* fork & exec */
-    pid_t subproc;
-    if((subproc = fork()) == -1) {
-        Panic("failed to create sub-process", false, 407);
-        return 1;
-    }
-    if(subproc == 0) { 
-        exit(exec_cmd(_cmd->_cmdword, args, fd, rd));
-    }
-    else {
-        int retVal;
-        waitpid(subproc, &retVal, 0);
-        return retVal;
-    }
-    
-    return 1;
+    /* exec */
+    return exec_cmd(_cmd->_cmdword, args, fd, rd);    
 }
 
 int exec_command(std::shared_ptr<Command> _cmd, int _pipefd[2]) {
@@ -215,7 +232,11 @@ int exec_pipeline(std::shared_ptr<Pipeline> _cmd) {
         }
         else {
             // create a tmp file
-            pipefd[1] = open("/tmp", O_TMPFILE | O_RDWR);
+            pipefd[1] = open("/tmp", O_TMPFILE | O_RDWR | O_CREAT);
+            if(pipefd[1] == -1) {
+                Panic("failed to create tmp file", false, 401);
+                return 1;
+            }
         }
 
         retVal = exec_command(cmd, pipefd);

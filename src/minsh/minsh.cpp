@@ -1,9 +1,8 @@
+#include <pwd.h>
 #include <minsh/minsh.h>
-#include <minsh/showp.h>
 #include <cmdexec/cmdexec.h>
 
 /* Define MinSH's static members */
-
 std::map<std::string, std::string> MinSH::_alias;
 
 std::map<std::string, std::string> MinSH::_variable;
@@ -23,6 +22,7 @@ std::string MinSH::_currentHis;
 int minsh_main_loop() {
 
     while(1) { 
+
         Assert(show_prompt(), "show_prompt failed", 201);
 
         read_command();
@@ -31,6 +31,51 @@ int minsh_main_loop() {
 
     }
 
-
     return 0;
+}
+
+/* get home dir */
+std::string get_home_dir() {
+    /* get user information */
+    passwd *pwd = getpwuid(getuid());
+    std::string userName = pwd->pw_name;
+
+    /* get cwd */
+    char cwdBuf[1024];
+    getcwd(cwdBuf,1024);
+    std::string cwd = cwdBuf;
+
+    /* home_dir */
+    std::string home_dir;
+    if(userName == "root"){
+        return std::string("/root");
+    } else {
+        return std::string("/home/") + userName;
+    }
+}
+
+/* Show prompt */
+bool show_prompt(){
+    /* get user information */
+    passwd *pwd = getpwuid(getuid());
+    std::string userName = pwd->pw_name;
+
+    /* get cwd */
+    char cwdBuf[1024];
+    getcwd(cwdBuf,1024);
+    std::string cwd = cwdBuf;
+
+    /* home dir */
+    std::string homeDir = get_home_dir();
+    if (cwd == homeDir)
+        cwd = "~";
+    
+    /* hostname */
+    gethostname(cwdBuf,1024);
+    std::string host_name = cwdBuf;
+
+    /* show */
+    std::cout<<userName<<'@'<<host_name<<":"<<cwd<<std::endl;
+    
+    return true;
 }

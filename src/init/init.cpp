@@ -11,14 +11,16 @@ bool init_alias();
 
 bool minsh_init() {
 
-    buildin_cmd_init();
-    
+    /* core */
     MinSH::init_var();
     MinSH::init_buf();
     MinSH::init_current_his();
     MinSH::init_history();
 
-
+    /* builtin */
+    buildin_cmd_init();
+    
+    /* alias */
     Assert(init_alias(), "Init_alias failed", 101);
 
 

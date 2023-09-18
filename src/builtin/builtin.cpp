@@ -2,6 +2,8 @@
 #include <iostream>
 #include <string>
 
+std::map<std::string,int(*)(std::vector<std::string>)> builtin_cmd_tab;
+
 void buildin_cmd_init() {
     builtin_cmd_tab["echo"] = minsh_echo;
     //buildin_cmd_tab["cd"] = minsh_change_directory;

@@ -3,7 +3,6 @@
 #include <cmdexec/cmdexec.h>
 
 /* Define MinSH's static members */
-std::string MinSH::_pwd;
 
 std::map<std::string, std::string> MinSH::_alias;
 
@@ -13,6 +12,8 @@ char MinSH::_buf[CONFIG_BUF_MEM_SIZE];
 uint32_t MinSH::_bHead, MinSH::_bTail;
 
 std::shared_ptr<CompleteCommand> MinSH::_cmd;
+
+std::vector<int> MinSH::_fdPool;
 
 std::string MinSH::_history[CONFIG_HISTORY_MEM_SIZE];
 uint32_t MinSH::_hHead, MinSH::_hTail;

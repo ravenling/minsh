@@ -6,7 +6,7 @@
 #include <map>
 #include <stdlib.h>
 
-std::map<std::string,int(*)(std::vector<std::string>)> builtin_cmd_tab;
+extern std::map<std::string,int(*)(std::vector<std::string>)> builtin_cmd_tab;
 
 /**
  * @brief init builtin command

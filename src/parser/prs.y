@@ -53,7 +53,7 @@ void parser::error(const parser::location_type &_locp, const std::string &_msg){
 %token Lbrace Rbrace Bang
 %token In
 
-// TODO: Node class type
+// Node class type
 //%type <std::shared_ptr<MinSHProgram>> program
 //%type <std::vector<std::shared_ptr<CompleteCommand>>> complete_commands
 %type <std::shared_ptr<CompleteCommand>> complete_command
@@ -175,7 +175,7 @@ pipe_sequence       :                                       command
                         }
                     ;
 
-/* TODO: maybe add other type of command */
+/** TODO: maybe add other type of command **/
 command             :   simple_command
                         { $$ = $1;}
                     ;

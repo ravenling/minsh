@@ -3,11 +3,10 @@
 #include <map>
 #include <string>
 #include <iostream>
-/* TODO: minsh init, init many things. Please list what you have init in @brief*/
 
 /**
  * @return      init success or not
- * @brief       init MinSH, including (TODO: bla1, bla2, bla3...)
+ * @brief       init MinSH
  **/
 bool minsh_init();
 

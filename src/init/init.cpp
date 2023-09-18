@@ -8,8 +8,6 @@
 bool init_alias();
 bool init_variable();
 
-/* TODO: implement minsh_init */
-
 bool minsh_init() {
 
     /* core */

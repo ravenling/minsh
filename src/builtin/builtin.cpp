@@ -47,21 +47,6 @@ int minsh_change_directory(std::vector<std::string> _args){
         int chdirRet = chdir(_args[0].c_str());
         return chdirRet;
     }
-    // if(_args.at(0) == "cd")
-    // {
-    //     int chdir_ret = chdir(home_dir.c_str());
-    //     return chdir_ret;
-    // }
-    // else
-    // {
-    //     _args.at(0) = cmd.substr(2, std::string::npos);
-    //     while (cmd.at(0) == ' ')
-    //     {
-    //         cmd.erase(0, 1);
-    //     }
-    //     int chdir_ret = chdir(cmd.c_str());
-    //     return chdir_ret;
-    // }
 }
 
 int minsh_quit(std::vector<std::string> _args){

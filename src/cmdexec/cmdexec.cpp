@@ -9,15 +9,7 @@
 #include "cmdexec.h"
 
 // run external binary
-int exec_external(std::string _cmd, std::vector<std::string> _args, int _fd[10], bool _rd[10]) {
-    /* redirection */
-    for(int i = 0; i < 10; i++) {
-        if(!_rd[i]) continue;
-        if(dup2(_fd[i], i) == -1) {
-            Panic("failed to duplicate file descriptor", false, 401);
-            return 1;
-        }
-    }
+int exec_external(std::string _cmd, std::vector<std::string> _args) {
 
     /* execl */
     char **argv = new char*[_args.size()+2];
@@ -37,72 +29,82 @@ int exec_external(std::string _cmd, std::vector<std::string> _args, int _fd[10],
     return 0;
 }
 
+void load_fd(int _fdBckup[10], int _fd[10], bool _rd[10]) {
+
+    for(int i = 0; i < 10; i++) {
+        if(!_rd[i]) continue;
+        if(dup2(_fdBckup[i], i) == -1) {
+            Panic("failed to duplicate file descriptor", false, 401);
+        }
+        close(_fdBckup[i]);
+    }
+
+}
+
 int exec_cmd(std::string _cmd, std::vector<std::string> _args, int _fd[10], bool _rd[10]) {
     int retVal = 1;
+
     /* execute */
 
-    // check if it is builtin, if it is, execute in the same process
-    if(builtin_cmd_tab.count(_cmd) > 0) {
-        /* backup fd table */
-        int fdBckup[10];
-        for(int i = 0; i < 10; i++) {
-            if(!_rd[i]) continue;
-            fdBckup[i] = open("/tmp", O_TMPFILE | O_RDWR);
-            if(fdBckup[i] == -1) {
-                Panic("failed to create tmp file", false, 401);
-                return 1;
-            }
-            if(dup2(i, fdBckup[i]) == -1) {
-                Panic("failed to duplicate file descriptor", false, 401);
-                return 1;
-            }
+    /* backup fd table */
+    int fdBckup[10];
+    for(int i = 0; i < 10; i++) {
+        if(!_rd[i]) continue;
+        fdBckup[i] = open("/tmp", O_TMPFILE | O_RDWR);
+        if(fdBckup[i] == -1) {
+            Panic("failed to create tmp file", false, 401);
+            return 1;
         }
-
-        /* duplicate fd to redirect */
-        for(int i = 0; i < 10; i++) {
-            if(!_rd[i]) continue;
-            if(dup2(_fd[i], i) == -1) {
-                Panic("failed to duplicate file descriptor", false, 401);
-                return 1;
-            }
-        }
-
-        retVal = builtin_cmd_tab[_cmd](_args);
-        
-        /* recover fd table */
-        for(int i = 0; i < 10; i++) {
-            if(!_rd[i]) continue;
-            if(dup2(fdBckup[i], i) == -1) {
-                Panic("failed to duplicate file descriptor", false, 401);
-                return 1;
-            }
-        }
-
-        return retVal;
-    }
-
-    // find absolute path
-    std::string absPath = find_external_command(_cmd);
-
-    if(absPath.size() == 0) {
-        Panic("couldn't find command", false, 406);
-        return 1;
-    }
-
-    // fork & exec
-    pid_t subProc = fork();
-    if(subProc == -1) {
-        Panic("couldn't find command", false, 407);
-        return 1;
-    }
-    if(subProc == 0) {      // child
-        exec_external(absPath, _args, _fd, _rd);
-    } else {                // parent
-        if(waitpid(subProc, &retVal, 0) == -1) {
-            Panic("couldn't find command", false, 413);
+        if(dup2(i, fdBckup[i]) == -1) {
+            Panic("failed to duplicate file descriptor", false, 401);
             return 1;
         }
     }
+
+    /* duplicate fd to redirect */
+    for(int i = 0; i < 10; i++) {
+        if(!_rd[i]) continue;
+        if(dup2(_fd[i], i) == -1) {
+            Panic("failed to duplicate file descriptor", false, 401);
+            return 1;
+        }
+    }
+
+    // check if it is builtin, if it is, execute in the same process
+    if(builtin_cmd_tab.count(_cmd) > 0) {
+        retVal = builtin_cmd_tab[_cmd](_args);
+    }
+    // fork & exec
+    else {
+        // find absolute path
+        std::string absPath = find_external_command(_cmd);
+
+        if(absPath.size() == 0) {
+            Panic("couldn't find command", false, 406);
+            load_fd(fdBckup, _fd, _rd);
+            return 1;
+        }
+
+        pid_t subProc = fork();
+        if(subProc == -1) {
+            Panic("couldn't find command", false, 407);
+            load_fd(fdBckup, _fd, _rd);
+            return 1;
+        }
+        if(subProc == 0) {      // child
+            exec_external(absPath, _args);
+        } else {                // parent
+            if(waitpid(subProc, &retVal, 0) == -1) {
+                Panic("couldn't find command", false, 413);
+                load_fd(fdBckup, _fd, _rd);
+                return 1;
+            }
+        }
+        
+    }
+
+    /* recover fd table */
+    load_fd(fdBckup, _fd, _rd);
 
     return retVal;
 }
@@ -296,7 +298,8 @@ int exec_pipeline(std::shared_ptr<Pipeline> _cmd) {
         }
         else {
             // create a tmp file
-            pipefd[1] = open("/tmp", O_TMPFILE | O_RDWR);
+            pipefd[1] = open("/tmp", O_TMPFILE | O_RDWR, 666);
+
             if(pipefd[1] == -1) {
                 Panic("failed to create tmp file", false, 401);
                 return 1;
@@ -305,11 +308,16 @@ int exec_pipeline(std::shared_ptr<Pipeline> _cmd) {
 
         retVal = exec_command(cmd, pipefd);
 
-        // output -> next input
+        // close input
         if(i != 0) {
             close(pipefd[0]);
         }
+
+        // output -> next input
         pipefd[0] = pipefd[1];
+        
+        // reset offset
+        lseek(pipefd[0], 0, 0);
 
     }
 
@@ -347,5 +355,3 @@ int exec_completecommand(std::shared_ptr<CompleteCommand> _cmd) {
 
     return 0;
 }
-
-

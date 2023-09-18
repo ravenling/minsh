@@ -77,7 +77,6 @@ inline void accept_char(char _c, Token &_token) {
 
 namespace yy {
 
-/* TODO: loc */
 parser::symbol_type yylex(){
     
     // Step 1: tokenize
@@ -209,7 +208,7 @@ bool grammer_conv(Token &_token) {
     /* Part 2 */
     /**
      * No Check: rule 2 
-     * TODO: Won't appear 3,4,5,6,8,9
+     * Won't appear: 3,4,5,6,8,9
      * Check seq: sep_op -> 7 -> 1
      **/
 
@@ -273,7 +272,7 @@ Token get_token() {
         char c = MinSH::read_buf();
 
         // rule 1 -- EOF then delimit
-        // TODO: actually, it is LF for now
+        // actually, it is LF for now
         if(c == '\n') {
             if(newToken._type == TK_NEW) {
                 newToken._type = TK_NEWLINE;

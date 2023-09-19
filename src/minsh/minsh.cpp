@@ -69,15 +69,24 @@ bool show_prompt(){
 
     /* home dir */
     std::string homeDir = get_home_dir();
-    if (cwd == homeDir)
-        cwd = "~";
+    if(cwd.substr(0, homeDir.size()) == homeDir) {
+        cwd = "~" + cwd.substr(homeDir.size(), cwd.size()-homeDir.size());
+    }
     
     /* hostname */
     gethostname(cwdBuf,1024);
     std::string host_name = cwdBuf;
 
     /* show */
-    std::cout<<userName<<'@'<<host_name<<":"<<cwd<<std::endl;
+    std::cout<<
+    "\033[1;35m" <<
+    userName << '@' << host_name <<
+    "\033[0m" << 
+    ":" <<
+    "\033[1;36m" <<
+    cwd <<  
+    "\033[0m" <<
+    std::endl;
     
     return true;
 }

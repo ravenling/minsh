@@ -13,9 +13,8 @@ cmdexec     - command executor
 builtin     - builtin functions    
 minsh       - main loop    
 # current goal
-1.  cmdexec - async
-2.  variable substitution
-3.  quote
+1.  variable substitution
+2.  quote
 # how to build
 1.  cd to /minsh
 2.  enter make to build

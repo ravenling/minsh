@@ -50,7 +50,7 @@ int exec_cmd(std::string _cmd, std::vector<std::string> _args, int _fd[10], bool
     int fdBckup[10];
     for(int i = 0; i < 10; i++) {
         if(!_rd[i]) continue;
-        fdBckup[i] = open("/tmp", O_TMPFILE | O_RDWR);
+        fdBckup[i] = open("/tmp", O_TMPFILE | O_RDWR, 666);
         if(fdBckup[i] == -1) {
             Panic("failed to create tmp file", false, 401);
             return 1;
@@ -346,7 +346,18 @@ int exec_andorcommand(std::shared_ptr<AndOrCommand> _cmd) {
 int exec_completecommand(std::shared_ptr<CompleteCommand> _cmd) {
 
     for(auto andor : _cmd->_andorlist) {
-        if(andor->_isasync) {   /** TODO: Async **/
+        if(andor->_isasync) {
+
+            pid_t subProc = fork();
+
+            if(subProc == -1) {
+                Panic("couldn't find command", false, 407);
+                return 1;
+            }
+            if(subProc == 0) {      // child
+                exec_andorcommand(andor);
+                exit(0);
+            }
 
         } else {
             exec_andorcommand(andor);

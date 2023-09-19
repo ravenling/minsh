@@ -44,7 +44,13 @@ int minsh_change_directory(std::vector<std::string> _args){
     }
     else{
         // cd /home/linux
+        if(_args[0].front() == '~') {
+            _args[0] = get_home_dir() + _args[0].substr(1,_args[0].size()-1);
+        }
         int chdirRet = chdir(_args[0].c_str());
+        if(chdirRet != 0) {
+            std::cout << "invalid path" << std::endl;
+        }
         return chdirRet;
     }
 }
@@ -72,60 +78,3 @@ int minsh_history(std::vector<std::string> _args){
 
     return 0;
 }
-
-
-/*
-int p_cd_function(std::string cmd)
-{
-    if (cmd == "cd")
-    {
-        int chdir_ret = chdir(home_dir.c_str());
-        return chdir_ret;
-    }
-    else
-    {
-        cmd = cmd.substr(2, std::string::npos);
-        while (cmd.at(0) == ' ')
-        {
-            cmd.erase(0, 1);
-        }
-        int chdir_ret = chdir(cmd.c_str());
-        return chdir_ret;
-    }
-}
-
-int p_quit_function()
-{
-    std::cout << "quit MinSH." << std::endl;
-    exit(0);
-}
-
-int p_history_function(std::string cmd)
-{
-    if (cmd == "history")
-    {
-        for (auto &it : cmd_history)
-        {
-            std::cout << it << std::endl;
-        }
-    }
-    else
-    {
-        cmd = cmd.substr(7, std::string::npos);
-        while (cmd.at(0) == ' ')
-        {
-            cmd.erase(0, 1);
-        }
-        int num_history = atoi(cmd.c_str());
-        if(num_history <= 0){
-            std::cout<<"history number error \n"<<std::endl;
-        }
-        auto it = cmd_history.end();
-        it -= (num_history - 1) ;
-        for (; it != cmd_history.end(); it++)
-        {
-            std::cout << *it << std::endl;
-        }
-    }
-}
-*/

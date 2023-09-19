@@ -6,10 +6,8 @@
 #include <stdio.h>
 #include <map>
 
-// TODO: change this include
 #include <minsh/minsh.h>
-#include "../config.h"
-#include "../minsh/minsh.h"
+#include <config.h>
 
 std::map<std::string, uint8_t> op_tab = {
 
@@ -65,6 +63,9 @@ bool is_operator(std::string &_str);
 bool is_op_begin(char _c);
 bool is_assign(std::string &_str);
 bool is_reserve(std::string &_str);
+bool is_blank(std::string &_str);
+
+bool is_c_blank(char _c);
 
 bool cmdFlag = false;
 
@@ -75,33 +76,60 @@ inline void accept_char(char _c, Token &_token) {
     next_ploc(_c);
 }
 
+// WORD buffer for substitution
+std::queue<Token> wordBuf;
+
+bool isSimple = true;       // constant for now
+bool isCmdName = true;
+
+
 namespace yy {
 
 parser::symbol_type yylex(){
     
-    // Step 1: tokenize
-    Token newToken = get_token();
-    Assert(newToken._type == TK_OPERATOR || newToken._type == TK_NEWLINE || newToken._type == TK_WORD, "tokenizer error", 301);
+    parser::symbol_type newSymbol;
 
-    // Step 2: substitution
-    if(newToken._type == TK_WORD) {
-        Assert(token_substitution(newToken), "substitution failed", 303);
+    if(wordBuf.size() == 0) {
+        int retVal = 1;
+        Token newToken;
+
+        while(retVal != 0) {
+
+            // Step 1: tokenize
+            newToken = get_token();
+            Assert(newToken._type == TK_OPERATOR || newToken._type == TK_NEWLINE || newToken._type == TK_WORD, "tokenizer error", 301);
+
+            // Step 2: substitution
+            if(newToken._type == TK_WORD) {
+                retVal = token_substitution(newToken);
+                Assert(retVal == 0 || retVal == 1, "substitution failed", 303);
+            } else {
+                retVal = 0;
+            }
+
+        }
+
+        // Step 3: grammer
+        Assert(grammer_conv(newToken), "grammer conversion failed", 302);
+
+        // Step 4: to symbol_type
+        parser::symbol_type tmpSymbol = get_symbol(newToken);
+        newSymbol.move(tmpSymbol);
+    
+    } else {
+
+        parser::symbol_type tmpSymbol = get_symbol(wordBuf.front());
+        newSymbol.move(tmpSymbol);
+        wordBuf.pop();
     }
 
-    // Step 3: grammer
-    Assert(grammer_conv(newToken), "grammer conversion failed", 302);
-
-    // Step 4: to symbol_type
-    parser::symbol_type newSymbol = get_symbol(newToken);
-
-    // Step 5: update location
-    ploc.step();
+    if(wordBuf.size() == 0) {
+        // Step 5: update location
+        ploc.step();
+    }
 
     return newSymbol;
 }
-
-
-
 
 parser::symbol_type get_symbol(Token &_token) {
     switch (_token._type) {
@@ -114,6 +142,7 @@ parser::symbol_type get_symbol(Token &_token) {
     case TK_NAME:
         return parser::make_NAME(_token._val, ploc); break;
     case TK_NEWLINE:
+        isCmdName = true;
         return parser::make_NEWLINE(_token._val, ploc); break;
     case TK_IO_NUMBER:
         return parser::make_IO_NUMBER((int8_t)(std::stoi(_token._val)), ploc); break;
@@ -138,16 +167,21 @@ parser::symbol_type get_symbol(Token &_token) {
             case RD_CLOBBER:
                 return parser::make_CLOBBER(RD_CLOBBER, ploc); break;
             case OP_DAND:
+                isCmdName = true;
                 return parser::make_AND_IF(OP_DAND, ploc); break;
             case OP_DPIPE:
+                isCmdName = true;
                 return parser::make_OR_IF(OP_DPIPE, ploc); break;
             case OP_PIPE:
+                isCmdName = true;
                 return parser::symbol_type('|', ploc); break;
             case OP_BANG:
                 return parser::symbol_type('!', ploc); break;
             case OP_AND:
+                isCmdName = true;
                 return parser::symbol_type('&', ploc); break;
             case OP_SEMICOLON:
+                isCmdName = true;
                 return parser::symbol_type(';', ploc); break;
             case OP_LBRACE:
                 return parser::make_Lbrace(ploc); break;
@@ -269,30 +303,201 @@ bool is_assign(std::string &_str) {
     return true;
 }
 
+bool is_blank(std::string &_str) {
+    for(auto c : _str) {
+        if(!(isblank(c) || c == '\n')) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool is_c_blank(char _c) {
+    return isblank(_c) || _c == '\n';
+}
+
 /* Substitution */
-bool token_substitution(Token &_token) {
+int token_substitution(Token &_token) {
+    std::string expRes;
+
     /* step 0: alias */
-    if(MinSH::is_alias(_token._val)) {
-        _token._val = MinSH::get_alias(_token._val);
+    if(isCmdName && MinSH::is_alias(_token._val)) {
+        std::string tmpali = MinSH::get_alias(_token._val);
+        if(!is_blank(tmpali)) {
+            isCmdName = false;
+            // parse by blank and return & send to wordBuf
+            size_t index = 0;
+            for(; index < tmpali.size(); index++) {
+                if(is_c_blank(tmpali[index])) continue;
+                expRes.push_back(tmpali[index]);
+                if(index >= tmpali.size() || is_c_blank(tmpali[index+1])) {
+                    wordBuf.push(Token{TK_WORD, expRes, ' '});
+                    expRes.clear();
+                } 
+            }
+        } else {
+            // get new token
+            isCmdName = true;
+            return 1;
+        }
     }
 
-    /* step 1: parameter expansion (only $NAME form) */
+    /* step 1: quote & substitution */
+    int quoteFlag = 0;       // 0 - non-quote ; 1 - "..." ; 2 - '...' 
+    std::string &val = _token._val;
+
+    for(size_t i = 0; i < _token._val.size(); i++) {
+        char c = val[i];
+
+        /* in quote */
+        // <single quote>
+        if(quoteFlag == 2) {
+            if(c == '\'') {
+                quoteFlag = 0;
+            }
+            else {
+                expRes.push_back(c); 
+            }
+            continue;
+        }
+
+        // <backslash>
+        if(c == '\\') {
+            i++; expRes.push_back(val[i]); continue;
+        }
+
+        // <double quote>
+        if(quoteFlag == 1) {
+            if(c == '"') {
+                quoteFlag = 0;
+                continue;
+            } else
+            if(c != '$'){
+                expRes.push_back(c); 
+                continue;
+            }
+        }
+
+        /* begin quote */
+        if(c == '"' && quoteFlag == 0) {
+            quoteFlag = 1;
+            continue;
+        }
+
+        if(c == '\'' && quoteFlag == 0) {
+            quoteFlag = 2;
+            continue;
+        }
+
+        /* parameter expansion (only $NAME form) */
+        if(c == '$') {
+            // $NAME
+            if(isalpha(val[i+1]) || val[i+1] == '_') {
+                int n = 1;
+                std::string name;
+                name.push_back(val[i+1]);
+                for(n = 1; n+i+1 < val.size(); n++) {
+                    if(isalnum(val[i+n+1]) || val[i+n+1] == '_') {
+                        name.push_back(val[i+n+1]);
+                        continue;
+                    }
+                    break;
+                }
+                // NAME length > 0
+                if(n > 0) {
+                    std::string apdstr;
+                    if(MinSH::_envVar.count(name) > 0) {
+                        apdstr = MinSH::_envVar[name];
+                    } else {
+                        apdstr = MinSH::get_var(name);
+                    }
+
+                    if(quoteFlag > 0) {             // quoted
+                        expRes.append(apdstr);
+                    } else {                        // unquoted
+                        if(is_c_blank(apdstr.front()) && expRes.size() > 0) {
+                            wordBuf.push(Token{TK_WORD, expRes, ' '});
+                            expRes.clear();
+                        }
+                        size_t index = 0;
+                        for(; index < apdstr.size(); index++) {
+                            while(index < apdstr.size() && is_c_blank(apdstr[index])) { index++;}
+                            if(index == apdstr.size()) break;
+                            expRes.push_back(apdstr[index]);
+                            if(index+1 < apdstr.size() && is_c_blank(apdstr[index+1])) {
+                                wordBuf.push(Token{TK_WORD, expRes, ' '});
+                                expRes.clear();
+                            }
+                        }
+                    }
+                    i += n;
+                    continue;
+                }
+            }
+
+        }
+
+        // Simple char
+        expRes.push_back(c);
+        
+    }
 
 
-    /* step 2: parameter expansion (only $NAME form) */
+    wordBuf.push(Token{TK_WORD, expRes, ' '});
 
-    return true;
+    _token = wordBuf.front();
+    wordBuf.pop();
+
+    if(!is_assign(_token._val)) {
+        isCmdName = false;
+    }
+
+    return 0;
 }
 
 /* Token recognition */
 Token get_token() {
     Token newToken{TK_NEW,""};
 
+    int quoteFlag = 0;       // 0 - non-quote ; 1 - "..." ; 2 - '...' 
+
     while(1) {
         if(MinSH::get_buf_count() <= 0) {
             read_newline();
         }
         char c = MinSH::read_buf();
+
+        // rule 4.1 -- <single quote>
+        if(quoteFlag == 2 && c != '\'') {
+            accept_char(c, newToken);
+            MinSH::pop_buf();
+            continue;
+        }
+
+        // rule 4.2 -- <backslash>
+        if(quoteFlag < 2 && c == '\\') {
+            if(newToken._type == TK_NEW) {
+                newToken._type = TK_WORD;
+            }
+            if(newToken._type == TK_WORD) {
+                accept_char(c, newToken);
+                MinSH::pop_buf();
+                c = MinSH::read_buf();
+                accept_char(c, newToken);
+                MinSH::pop_buf();
+                continue;
+            } else {
+                newToken._delim = c;
+                return newToken;
+            }
+        }
+
+        // rule 4.3 -- <double quote>
+        if(quoteFlag == 1 && c != '"' && c!='$') {
+            accept_char(c, newToken);
+            MinSH::pop_buf();
+            continue;
+        }
 
         // rule 1 -- EOF then delimit
         // actually, it is LF for now
@@ -326,9 +531,51 @@ Token get_token() {
             }
         }
 
-        // TODO: rule 4 -- quote
+        // rule 4.4 -- quote begin
+        if(c == '\'') {   // single
+            if(quoteFlag == 2) {
+                quoteFlag = 0;
+                accept_char(c, newToken);
+                MinSH::pop_buf();
+                continue;
+            } else 
+            if(quoteFlag == 0){
+                // New Token or WORD
+                if(newToken._type == TK_NEW || newToken._type == TK_WORD) {
+                    newToken._type = TK_WORD;
+                    quoteFlag = 2;
+                    accept_char(c, newToken);
+                    MinSH::pop_buf();
+                    continue;
+                } else {
+                    newToken._delim = c;
+                    return newToken;
+                }
+            }
+        }
+        if(c == '\"') {
+            if(quoteFlag == 1) {
+                quoteFlag = 0;
+                accept_char(c, newToken);
+                MinSH::pop_buf();
+                continue;
+            } else 
+            if(quoteFlag == 0){
+                // New Token or WORD
+                if(newToken._type == TK_NEW || newToken._type == TK_WORD) {
+                    newToken._type = TK_WORD;
+                    quoteFlag = 1;
+                    accept_char(c, newToken);
+                    MinSH::pop_buf();
+                    continue;
+                } else {
+                    newToken._delim = c;
+                    return newToken;
+                }
+            }
+        }
 
-        // TODO: rule 5 -- substitution (maybe)
+        // TODO: rule 5 -- substitution (for now, don't need this part)
 
         // rule 6 -- new operator
         if(is_op_begin(c)) {

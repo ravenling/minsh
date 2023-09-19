@@ -2,6 +2,7 @@
 #define PARSER_H
 
 #include <debug/dbg.h>
+#include <queue>
 #include "ast.h"
 #include "prs.tab.hh"
 
@@ -69,6 +70,9 @@ namespace yy {
 
 extern yy::parser::location_type ploc;
 
+// WORD buffer for substitution
+extern std::queue<Token> wordBuf;
+
 namespace yy {
 /**
  * @return      symbol
@@ -86,11 +90,11 @@ parser::symbol_type get_symbol(Token &_token);
 bool grammer_conv(Token &_token);
 
 /**
- * @return      true: success ; false: error 
+ * @return      0: success ; 1: readmore ; <else>: error
  * @brief       perform expansion
  * @warning     DO NOT use this function out of *test* or *parser*
  **/
-bool token_substitution(Token &_token);
+int token_substitution(Token &_token);
 
 /**
  * @return      token

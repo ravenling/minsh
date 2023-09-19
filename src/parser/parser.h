@@ -86,6 +86,13 @@ parser::symbol_type get_symbol(Token &_token);
 bool grammer_conv(Token &_token);
 
 /**
+ * @return      true: success ; false: error 
+ * @brief       perform expansion
+ * @warning     DO NOT use this function out of *test* or *parser*
+ **/
+bool token_substitution(Token &_token);
+
+/**
  * @return      token
  * @brief       get new token
  * @warning     DO NOT use this function out of *test* or *parser*

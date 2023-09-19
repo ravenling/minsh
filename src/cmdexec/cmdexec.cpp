@@ -195,7 +195,6 @@ int prefix_parse(std::vector<std::shared_ptr<PrefixSuffix>> &_prefix, bool _only
             else {
                 /** TODO: local var **/
 
-
             }
             break;
         case AST_IOREDIRECT:

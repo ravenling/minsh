@@ -83,17 +83,25 @@ parser::symbol_type yylex(){
     Token newToken = get_token();
     Assert(newToken._type == TK_OPERATOR || newToken._type == TK_NEWLINE || newToken._type == TK_WORD, "tokenizer error", 301);
 
-    // Step 2: grammer
+    // Step 2: substitution
+    if(newToken._type == TK_WORD) {
+        Assert(token_substitution(newToken), "substitution failed", 303);
+    }
+
+    // Step 3: grammer
     Assert(grammer_conv(newToken), "grammer conversion failed", 302);
 
-    // Step 3: to symbol_type
+    // Step 4: to symbol_type
     parser::symbol_type newSymbol = get_symbol(newToken);
 
-    // Step 4: update location
+    // Step 5: update location
     ploc.step();
 
     return newSymbol;
 }
+
+
+
 
 parser::symbol_type get_symbol(Token &_token) {
     switch (_token._type) {
@@ -257,6 +265,21 @@ bool is_assign(std::string &_str) {
     if(_str[i] != '=') {
         return false;
     }
+
+    return true;
+}
+
+/* Substitution */
+bool token_substitution(Token &_token) {
+    /* step 0: alias */
+    if(MinSH::is_alias(_token._val)) {
+        _token._val = MinSH::get_alias(_token._val);
+    }
+
+    /* step 1: parameter expansion (only $NAME form) */
+
+
+    /* step 2: parameter expansion (only $NAME form) */
 
     return true;
 }

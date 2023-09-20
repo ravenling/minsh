@@ -50,6 +50,9 @@ $(OBJ_DIR)/parser.o: $(SRC_DIR)/parser/parser.cpp
 $(OBJ_DIR)/lex.o: $(SRC_DIR)/parser/lex.cpp
 	$(CC) -c $(CFLAGS) $^ -o $@
 
+$(OBJ_DIR)/readline.o: $(SRC_DIR)/parser/readline.cpp
+	$(CC) -c $(CFLAGS) $^ -o $@
+
 $(OBJ_DIR)/prs.tab.o: $(SRC_DIR)/parser/prs.tab.cc
 	$(CC) -c $(CFLAGS) $^ -o $@
 

@@ -19,6 +19,16 @@ void buildin_cmd_init();
 int minsh_help(std::vector<std::string> _args);
 
 /**
+ * @brief MinSH alias command
+ **/
+int minsh_alias(std::vector<std::string> _args);
+
+/**
+ * @brief MinSH unalias command
+ **/
+int minsh_unalias(std::vector<std::string> _args);
+
+/**
  * @brief MinSH echo command
  **/
 int minsh_echo(std::vector<std::string> _args);
@@ -29,9 +39,9 @@ int minsh_echo(std::vector<std::string> _args);
 int minsh_change_directory(std::vector<std::string> _args);
 
 /**
- * @brief MinSH quit command
+ * @brief MinSH exit command
  **/
-int minsh_quit(std::vector<std::string> _args);
+int minsh_exit(std::vector<std::string> _args);
 
 /**
  * @brief MinSH history command

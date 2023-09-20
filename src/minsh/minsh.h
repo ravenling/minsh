@@ -49,17 +49,24 @@ public:
         Assert(_ali.size() > 0 && _cmd.size() > 0, "Parameter \"_ali\" and \"_cmd\" in \"set_alias\" cannot be empty string", 201);
         _alias[_ali] = std::string(_cmd);
     }
-    static void del_alias(std::string & _ali, bool _isall) {
+    static int del_alias(std::string & _ali, bool _isall) {
         if(_isall) {
             _alias.clear();
         }
         else {
             if(_alias.count(_ali) <= 0) {
                 Log("Trying to delete an unavalible alias", DEBUG_WARN);
+                return 1;
             }
             else {
                 _alias.erase(_ali);
             }
+        }
+        return 0;
+    }
+    static void print_alias() {
+        for(auto ali : _alias) {
+            std::cout << "alias " << ali.first << "=" << "'" << ali.second << "'" << std::endl;
         }
     }
 

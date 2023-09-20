@@ -243,6 +243,7 @@ int exec_simplecommand(std::shared_ptr<SimpleCommand> _cmd, int _pipefd[2]) {
     for(int i = 0; i < 10; i++) {rd[i] = false;}
     rd[0] = true; fd[0] = _pipefd[0];
     rd[1] = true; fd[1] = _pipefd[1];
+    rd[2] = true; fd[2] = 2;
 
     /* prefix  */
     if(prefix_parse(_cmd->_prefix, _cmd->_cmdword == "", fd, rd) != 0) {

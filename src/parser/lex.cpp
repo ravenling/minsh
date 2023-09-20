@@ -312,7 +312,17 @@ bool is_c_blank(char _c) {
 
 /* Substitution */
 int token_substitution(Token &_token) {
+
     std::string expRes;
+
+    /* step -1: special case for IO_NUMBER */
+    bool numFlag = false;
+    for(auto c : _token._val) {
+        if(!isdigit(c)) numFlag = false;
+    }
+    if(numFlag) {
+        return 0;
+    }
 
     /* step 0: alias */
     if(isCmdName && MinSH::is_alias(_token._val)) {
@@ -325,7 +335,7 @@ int token_substitution(Token &_token) {
                 if(is_c_blank(tmpali[index])) continue;
                 expRes.push_back(tmpali[index]);
                 if(index >= tmpali.size() || is_c_blank(tmpali[index+1])) {
-                    wordBuf.push(Token{TK_WORD, expRes, ' '});
+                    wordBuf.push(Token{TK_WORD, expRes, ' '});  /** WARNING: delim changed **/
                     expRes.clear();
                 } 
             }
@@ -418,7 +428,7 @@ int token_substitution(Token &_token) {
                             if(index == apdstr.size()) break;
                             expRes.push_back(apdstr[index]);
                             if(index+1 < apdstr.size() && is_c_blank(apdstr[index+1])) {
-                                wordBuf.push(Token{TK_WORD, expRes, ' '});
+                                wordBuf.push(Token{TK_WORD, expRes, ' '});  /** WARNING: delim changed **/
                                 expRes.clear();
                             }
                         }
@@ -435,7 +445,7 @@ int token_substitution(Token &_token) {
         
     }
 
-    wordBuf.push(Token{TK_WORD, expRes, ' '});
+    wordBuf.push(Token{TK_WORD, expRes, _token._delim});
 
     _token = wordBuf.front();
     wordBuf.pop();
@@ -631,40 +641,4 @@ bool is_op_begin(char _c) {
 
 bool is_operator(std::string &_str) {
     return op_tab.count(_str) > 0;
-}
-
-/* Try to read a new line */
-bool read_newline() {
-    if(!initFlag) {
-        printf("> ");
-    } else {
-        initFlag = false;
-    }
-    bool readFlag = true;
-    char inputBuf[CONFIG_BUF_MEM_SIZE];
-    while(readFlag){
-        readFlag = false;
-        // read a line
-        std::cin.getline(inputBuf, CONFIG_BUF_SIZE-1);
-        int len = strlen(inputBuf);
-        // \ + \n should be removed and read again
-        bool rmFlag = false;
-        for(int i = len - 1; i >= 0; i--) {
-            if(inputBuf[i] != '\\') break;
-            rmFlag = !rmFlag;
-        }
-        if(rmFlag) {  // remove
-            readFlag = true;
-            printf("> ");
-            len--;
-        } else {
-            inputBuf[len] = '\n';
-            len++;
-        }
-        // Send to buffer
-        if(!MinSH::write_buf(inputBuf, len)){
-            return false;
-        }
-    }
-    return true;
 }

@@ -82,7 +82,6 @@ std::queue<Token> wordBuf;
 bool isSimple = true;       // constant for now
 bool isCmdName = true;
 
-
 namespace yy {
 
 parser::symbol_type yylex(){
@@ -142,7 +141,6 @@ parser::symbol_type get_symbol(Token &_token) {
     case TK_NAME:
         return parser::make_NAME(_token._val, ploc); break;
     case TK_NEWLINE:
-        isCmdName = true;
         return parser::make_NEWLINE(_token._val, ploc); break;
     case TK_IO_NUMBER:
         return parser::make_IO_NUMBER((int8_t)(std::stoi(_token._val)), ploc); break;
@@ -167,21 +165,16 @@ parser::symbol_type get_symbol(Token &_token) {
             case RD_CLOBBER:
                 return parser::make_CLOBBER(RD_CLOBBER, ploc); break;
             case OP_DAND:
-                isCmdName = true;
                 return parser::make_AND_IF(OP_DAND, ploc); break;
             case OP_DPIPE:
-                isCmdName = true;
                 return parser::make_OR_IF(OP_DPIPE, ploc); break;
             case OP_PIPE:
-                isCmdName = true;
                 return parser::symbol_type('|', ploc); break;
             case OP_BANG:
                 return parser::symbol_type('!', ploc); break;
             case OP_AND:
-                isCmdName = true;
                 return parser::symbol_type('&', ploc); break;
             case OP_SEMICOLON:
-                isCmdName = true;
                 return parser::symbol_type(';', ploc); break;
             case OP_LBRACE:
                 return parser::make_Lbrace(ploc); break;
@@ -226,8 +219,9 @@ parser::symbol_type get_symbol(Token &_token) {
 };
 
 bool grammer_conv(Token &_token) {
-    // Sep_op
-    if(_token._type == TK_OPERATOR && (_token._val == ";" || _token._val == "&")) {
+    // Sep_op or NEWLINE
+    if( (_token._type == TK_OPERATOR && (_token._val == ";" || _token._val == "&")) || 
+        _token._type == TK_NEWLINE) {
         cmdFlag = false;
     }
 
@@ -337,7 +331,6 @@ int token_substitution(Token &_token) {
             }
         } else {
             // get new token
-            isCmdName = true;
             return 1;
         }
     }
@@ -441,7 +434,6 @@ int token_substitution(Token &_token) {
         expRes.push_back(c);
         
     }
-
 
     wordBuf.push(Token{TK_WORD, expRes, ' '});
 
@@ -643,7 +635,11 @@ bool is_operator(std::string &_str) {
 
 /* Try to read a new line */
 bool read_newline() {
-    printf("> ");
+    if(!initFlag) {
+        printf("> ");
+    } else {
+        initFlag = false;
+    }
     bool readFlag = true;
     char inputBuf[CONFIG_BUF_MEM_SIZE];
     while(readFlag){

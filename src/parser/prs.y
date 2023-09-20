@@ -181,23 +181,41 @@ command             :   simple_command
                     ;
 
 simple_command      :   cmd_prefix      cmd_word    cmd_suffix
-                        { $$ = std::make_shared<SimpleCommand>($1, $2, $3); }
+                        {
+                            isCmdName = true;
+                            $$ = std::make_shared<SimpleCommand>($1, $2, $3);
+                        }
                     |   cmd_prefix      cmd_word
-                        { $$ = std::make_shared<SimpleCommand>($1, $2, std::vector<std::shared_ptr<PrefixSuffix>>{}); }
+                        {
+                            isCmdName = true;
+                            $$ = std::make_shared<SimpleCommand>($1, $2, std::vector<std::shared_ptr<PrefixSuffix>>{}); }
                     |   cmd_prefix
-                        { $$ = std::make_shared<SimpleCommand>($1, std::string(""),std::vector<std::shared_ptr<PrefixSuffix>>{} ); }
+                        {
+                            isCmdName = true;
+                            $$ = std::make_shared<SimpleCommand>($1, std::string(""),std::vector<std::shared_ptr<PrefixSuffix>>{} );
+                        }
                     |   cmd_name        cmd_suffix
-                        { $$ = std::make_shared<SimpleCommand>(std::vector<std::shared_ptr<PrefixSuffix>>{}, $1, $2); }
+                        { 
+                            isCmdName = true;
+                            $$ = std::make_shared<SimpleCommand>(std::vector<std::shared_ptr<PrefixSuffix>>{}, $1, $2);
+                        }
                     |   cmd_name
-                        { $$ = std::make_shared<SimpleCommand>(std::vector<std::shared_ptr<PrefixSuffix>>{}, $1, std::vector<std::shared_ptr<PrefixSuffix>>{}); }
+                        { 
+                            isCmdName = true;
+                            $$ = std::make_shared<SimpleCommand>(std::vector<std::shared_ptr<PrefixSuffix>>{}, $1, std::vector<std::shared_ptr<PrefixSuffix>>{});
+                        }
                     ;
 
 cmd_name            :   WORD            /* rule 7a */
-                        { $$ = $1; }
+                        {  
+                            $$ = $1;
+                        }
                     ;
 
 cmd_word            :   WORD            /* rule 7b */
-                        { $$ = $1; }
+                        { 
+                            $$ = $1;
+                        }
                     ;
 
 // change io_redirect to redirect_list

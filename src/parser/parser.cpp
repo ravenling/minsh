@@ -3,12 +3,16 @@
 
 std::shared_ptr<CompleteCommand> cmdAST;
 
+bool initFlag;
+
 bool read_command() {
     // reset current history
     MinSH::init_current_his();
 
     // reset location for yy::parser::error
     ploc.initialize();
+
+    initFlag = true;
 
     // create parser
     yy::parser cmdParser;

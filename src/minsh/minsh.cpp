@@ -84,8 +84,13 @@ bool show_prompt(){
     ":" <<
     "\033[1;36m" <<
     cwd <<  
-    "\033[0m" <<
-    std::endl;
+    "\033[0m";
+
+    if(geteuid() == 0) {
+        std::cout << "# ";
+    } else {
+        std::cout << "$ ";
+    }
     
     return true;
 }

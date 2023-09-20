@@ -72,6 +72,10 @@ extern yy::parser::location_type ploc;
 
 // WORD buffer for substitution
 extern std::queue<Token> wordBuf;
+extern bool isCmdName;
+
+// first read
+extern bool initFlag;
 
 namespace yy {
 /**

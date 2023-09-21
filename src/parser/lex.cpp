@@ -325,9 +325,12 @@ int token_substitution(Token &_token) {
     }
 
     /* step 0: alias */
+    bool aliasFlag = false;
+
     if(isCmdName && MinSH::is_alias(_token._val)) {
         std::string tmpali = MinSH::get_alias(_token._val);
         if(!is_blank(tmpali)) {
+            aliasFlag = true;
             isCmdName = false;
             // parse by blank and return & send to wordBuf
             size_t index = 0;
@@ -349,7 +352,7 @@ int token_substitution(Token &_token) {
     int quoteFlag = 0;       // 0 - non-quote ; 1 - "..." ; 2 - '...' 
     std::string &val = _token._val;
 
-    for(size_t i = 0; i < _token._val.size(); i++) {
+    for(size_t i = 0; !aliasFlag && i < _token._val.size(); i++) {
         char c = val[i];
 
         /* in quote */

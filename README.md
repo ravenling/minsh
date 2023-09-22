@@ -50,4 +50,4 @@ Minimal Interactive Shell project for ECUST's CS course: ***The OS Course Design
 >make clean
 >```
 # project references
-[1]shell language refernece: https://pubs.opengroup.org/onlinepubs/9699919799.2016edition/utilities/V3_chap02.html.
+[1]shell language reference: https://pubs.opengroup.org/onlinepubs/9699919799.2016edition/utilities/V3_chap02.html.

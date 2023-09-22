@@ -10,7 +10,6 @@
 std::ofstream g_log_file;
 #endif
 
-
 int main(int argc, char **argv) {
 
     /* Initiating */

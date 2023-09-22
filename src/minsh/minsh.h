@@ -10,8 +10,6 @@
 #include <common.h>
 #include <unistd.h>
 
-/* TODO: complete the MinSH class */
-
 class MinSH{
 
 public:

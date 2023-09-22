@@ -31,7 +31,7 @@ $(shell mkdir -p $(OBJ_DIR))
 # default goal
 default: $(BIN)
 
-$(BIN): $(OBJS)
+$(BIN): $(SRC_DIR)/parser/prs.tab.cc $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $@
 
 # components

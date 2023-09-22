@@ -42,3 +42,4 @@
 /src/parser/prs.tab.cc
 /src/parser/prs.tab.hh
 /src/parser/location.hh
+/test
